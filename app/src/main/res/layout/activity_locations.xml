@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/black"
+    tools:context=".Activity.LocationsActivity">
+
+    <RelativeLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:layout_marginTop="35dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Pick location"
+            android:textSize="18sp"
+            android:fontFamily="@font/poppins_semibold"
+            android:textColor="@color/white" />
+
+        <ImageView
+            android:id="@+id/backbt"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:padding="15dp"
+            android:src="@drawable/backbt" />
+
+        <ImageView
+            android:id="@+id/add"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:padding="15dp"
+            android:src="@drawable/add" />
+
+    </RelativeLayout>
+
+    <AutoCompleteTextView
+        android:id="@+id/enter_city"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/light_curve"
+        android:backgroundTint="#80FFFFFF"
+        android:layout_margin="5dp"
+        android:padding="5dp"
+        android:drawablePadding="5dp"
+        android:hint="Search for a city or airport"
+        android:textColor="#80FFFFFF"
+        android:textColorHint="#80FFFFFF"
+        android:inputType="text"
+        android:maxLines="1"
+        android:imeActionId="666"
+        android:imeActionLabel="Enter"
+        android:imeOptions="actionGo"
+        android:visibility="gone"
+        android:drawableStart="@drawable/search_icon"
+        android:layout_below="@id/toolbar"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/location_rv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/enter_city"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="2"
+        tools:listitem="@layout/item_locations" />
+
+</RelativeLayout>

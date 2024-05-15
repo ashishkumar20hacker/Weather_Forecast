@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:layout_margin="5dp"
+    app:cardBackgroundColor="@color/grey"
+    app:cardCornerRadius="5dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:paddingHorizontal="18dp"
+        android:orientation="horizontal">
+
+        <pl.droidsonroids.gif.GifImageView
+            android:id="@+id/sound_gif"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:src="@drawable/waves" />
+
+        <TextView
+            android:id="@+id/sound_name"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/poppins"
+            android:gravity="center"
+            android:text="Ocean Waves"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <RelativeLayout
+            android:layout_width="50dp"
+            android:layout_height="match_parent">
+
+            <pl.droidsonroids.gif.GifImageView
+                android:id="@+id/pause"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                android:src="@drawable/small_music_gif" />
+
+            <ImageView
+                android:id="@+id/play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/playcricle"
+                android:layout_centerInParent="true"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/notification_nav"
+        android:icon="@drawable/notification"
+        android:title="Notification"
+        app:showAsAction="never|withText" />
+    <item
+        android:id="@+id/unit_nav"
+        android:icon="@drawable/unit"
+        android:title="Unit"
+        app:showAsAction="never|withText" />
+    <item
+        android:id="@+id/widgets_nav"
+        android:icon="@drawable/widget"
+        android:title="Widgets"
+        app:showAsAction="never|withText" />
+
+</menu>
