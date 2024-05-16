@@ -114,17 +114,18 @@ class LocationsAdapter(var context: Activity, list: MutableList<String>) :
     }
 
     private fun setContent(binding: ViewHolder) {
-        if (SplashActivity.condition.toLowerCase().contains("rain") || SplashActivity.condition.toLowerCase()
-                .contains("shower") || SplashActivity.condition.toLowerCase().contains("drizzle")
+        if ( binding.conditionTv.text.toString().lowercase().contains("rain") ||  binding.conditionTv.text.toString().lowercase()
+                .contains("shower") ||  binding.conditionTv.text.toString().lowercase().contains("drizzle")
         ) {
             binding.conditionIv.setImageResource(R.drawable.light_rain)
-        } else if (SplashActivity.condition.toLowerCase().contains("sunny") || SplashActivity.condition.toLowerCase()
-                .contains("smoke")
+        } else if ( binding.conditionTv.text.toString().lowercase().contains("sunny") ||  binding.conditionTv.text.toString().lowercase()
+                .contains("smoke")||  binding.conditionTv.text.toString().lowercase()
+                .contains("clear")
         ) {
             binding.conditionIv.setImageResource(R.drawable.sunny_img)
-        } else if (SplashActivity.condition.toLowerCase().contains("night")) {
+        } else if ( binding.conditionTv.text.toString().lowercase().contains("night")) {
             binding.conditionIv.setImageResource(R.drawable.night_img)
-        } else if (SplashActivity.condition.toLowerCase().contains("storm")) {
+        } else if ( binding.conditionTv.text.toString().lowercase().contains("storm")) {
             binding.conditionIv.setImageResource(R.drawable.storme_img)
         }
     }

@@ -86,21 +86,6 @@ class DashboardActivity : AppCompatActivity() {
             nextActivity(this@DashboardActivity, SoundsActivity::class.java)
         }
 
-        if (connectionDetector.isConnectingToInternet) {
-            if (!address.isEmpty()) {
-                latlong = convertAddress(this, address)
-                binding.selectedLocation.text = address
-                getWeatherDetails(latlong)
-            } else {
-                getLastLocation()
-                getWeatherDetails(latlong)
-            }
-            binding.weatherLl.setEnabled(true)
-        } else {
-            binding.weatherLl.setEnabled(false)
-            Toast.makeText(this, "Please connect to internet!!", Toast.LENGTH_SHORT).show()
-        }
-
     }
 
     private fun backButtonPressedListener() {
@@ -140,6 +125,21 @@ class DashboardActivity : AppCompatActivity() {
         if (!isLocationPermissionGranted(this)) {
             requestLocationPermission(this)
         } else {
+            address = preferences.getString(SELECTED_ADDRESS, "")!!
+            if (connectionDetector.isConnectingToInternet) {
+                if (!address.isEmpty()) {
+                    latlong = convertAddress(this, address)
+                    binding.selectedLocation.text = address
+                    getWeatherDetails(latlong)
+                } else {
+                    getLastLocation()
+                    getWeatherDetails(latlong)
+                }
+                binding.weatherLl.setEnabled(true)
+            } else {
+                binding.weatherLl.setEnabled(false)
+                Toast.makeText(this, "Please connect to internet!!", Toast.LENGTH_SHORT).show()
+            }
 
 
             binding.menu.setOnClickListener { view ->
@@ -308,27 +308,22 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun setContent() {
-        if (condition.toLowerCase().contains("rain") || condition.toLowerCase()
-                .contains("shower") || condition.toLowerCase().contains("drizzle")
-        ) {
+        if (condition.lowercase().contains("rain") || condition.lowercase().contains("shower") || condition.lowercase().contains("drizzle") || condition.lowercase().contains("cloudy")) {
             binding.conditionIv.setImageResource(R.drawable.light_rain)
             binding.mainLayout.setBackgroundResource(R.drawable.strom_bg)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-        } else if (condition.toLowerCase().contains("sunny") || condition.toLowerCase()
-                .contains("smoke")|| condition.toLowerCase()
-                .contains("haze")
-        ) {
+        } else if (condition.lowercase().contains("sunny") || condition.lowercase().contains("smoke") || condition.lowercase().contains("clear") || condition.lowercase().contains("haze")) {
             binding.conditionIv.setImageResource(R.drawable.sunny_img)
             binding.mainLayout.setBackgroundResource(R.drawable.sunny_bg)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.sunny_gif).into(binding.conditionGif)
-        } else if (condition.toLowerCase().contains("night")) {
+        } else if (condition.lowercase().contains("night")) {
             binding.conditionIv.setImageResource(R.drawable.night_img)
             binding.mainLayout.setBackgroundResource(R.drawable.night_bg)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.cloudy_night_gif).into(binding.conditionGif)
-        } else if (condition.toLowerCase().contains("storm")) {
+        } else if (condition.lowercase().contains("storm")) {
             binding.conditionIv.setImageResource(R.drawable.storme_img)
             binding.mainLayout.setBackgroundResource(R.drawable.strom_bg_img)
             binding.conditionGif.setVisibility(View.VISIBLE)

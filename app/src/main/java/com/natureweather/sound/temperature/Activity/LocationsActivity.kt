@@ -11,6 +11,7 @@ import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Extras.Utils.convertAddress
+import com.natureweather.sound.temperature.Extras.Utils.hideKeyboard
 import com.natureweather.sound.temperature.databinding.ActivityLocationsBinding
 
 
@@ -42,6 +43,8 @@ class LocationsActivity : AppCompatActivity() {
                                 binding.enterCity.getText().toString().trim()
                             if (!enteredLocation.isEmpty()) {
                                 binding.enterCity.setVisibility(View.GONE)
+                                binding.enterCity.setText("")
+                                hideKeyboard(this@LocationsActivity)
                                 latlong = convertAddress(this@LocationsActivity, enteredLocation)
                                 preferences.addStringItem(enteredLocation)
                                 preferences.putString(SELECTED_ADDRESS,enteredLocation)
