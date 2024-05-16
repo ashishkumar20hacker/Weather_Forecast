@@ -7,5 +7,8 @@ class AppInterfaces {
     interface SearchWeatherInterface {
         fun getWeatherDetails(scrapedElementsList: Elements?)
     }
+    interface SearchTimeInterface {
+        fun getTimeDetails(time: String)
+    }
 }
 

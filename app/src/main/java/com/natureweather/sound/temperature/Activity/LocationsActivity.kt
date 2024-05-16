@@ -30,7 +30,6 @@ class LocationsActivity : AppCompatActivity() {
         preferences = SharePreferences(this)
 
         binding.add.setOnClickListener { binding.enterCity.setVisibility(View.VISIBLE) }
-        backButtonPressedListener()
 
         binding.backbt.setOnClickListener{ onBackPressedDispatcher.onBackPressed() }
 
@@ -69,15 +68,6 @@ class LocationsActivity : AppCompatActivity() {
             adapter = LocationsAdapter(this@LocationsActivity, locationsList)
             binding.locationRv.setAdapter(adapter)
         }
-    }
-
-    private fun backButtonPressedListener() {
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(enabled = true) {
-            override fun handleOnBackPressed() {
-                startActivity(Intent(applicationContext, DashboardActivity::class.java))
-                finish()
-            }
-        })
     }
 
 }

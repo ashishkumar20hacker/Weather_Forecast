@@ -78,8 +78,8 @@ class DashboardActivity : AppCompatActivity() {
             nextActivity(this@DashboardActivity, LocationsActivity::class.java)
         }
 
-        binding.soundsLl.setOnClickListener {
-            nextActivity(this@DashboardActivity, SoundsActivity::class.java)
+        binding.weatherLl.setOnClickListener {
+            nextActivity(this@DashboardActivity, DetailedWeatherActivity::class.java)
         }
 
         binding.soundsLl.setOnClickListener {
