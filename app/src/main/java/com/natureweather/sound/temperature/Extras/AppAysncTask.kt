@@ -19,85 +19,7 @@ object AppAsyncTask {
     private const val Weather = "https://weather.com/en-IN/weather/today/l/"
     private const val HourlyWeather = "https://weather.com/en-IN/weather/hourbyhour/l/"
     private const val TenDaysWeather = "https://weather.com/en-IN/weather/tenday/l/"
-    const val CurrentTime = "https://time.is/"
-
-
-
-    class SearchCurrentTime(
-        searchTimeInterface: AppInterfaces.SearchTimeInterface,
-        search: String
-    ) :
-        AsyncTask<Any?, Any?, Any?>() {
-        var searchTimeInterface: AppInterfaces.SearchTimeInterface
-        var search: String
-        var selectedDiv = Elements()
-        var formattedTime: String = ""
-
-        init {
-            this.searchTimeInterface = searchTimeInterface
-            this.search = search
-        }
-
-        override fun doInBackground(objects: Array<Any?>): Any? {
-            try {
-                val document = Jsoup.connect(CurrentTime + search).get()
-                selectedDiv = document.select("time[id=clock]")
-                val string1 = selectedDiv.select("span[id=bcdigit1]").text()
-                val string2 = selectedDiv.select("span[id=bcdigit2]").text()
-                val string3 = selectedDiv.select("span[class=sep]").text()
-                val string4 = selectedDiv.select("span[id=bcdigit3]").text()
-                val string5 = selectedDiv.select("span[id=bcdigit4]").text()
-                formattedTime = "$string1$string2$string3$string4$string5"
-                /*if (selectedDiv != null) {
-                    val inputTime = selectedDiv.text()
-
-                    if (inputTime.isNotEmpty()) {
-                        val df = SimpleDateFormat("HH:mm", Locale.ENGLISH)
-                        df.timeZone = TimeZone.getTimeZone("UTC")
-                        val date = df.parse(inputTime)
-
-                        if (date != null) {
-                            df.timeZone = TimeZone.getDefault()
-                            formattedTime = df.format(date)
-                        } else {
-                            Log.e(TAG, "Failed to parse date: inputTime=$inputTime")
-                        }
-                    } else {
-                        Log.e(TAG, "Empty inputTime")
-                    }
-                } else {
-                    Log.e(TAG, "Failed to find selectedDiv")
-                }*/
-            } catch (e: IOException) {
-                println("scrapping crashed" + e.message)
-            }
-            return ""
-        }
-
-        override fun onPreExecute() {
-            super.onPreExecute()
-        }
-
-        override fun onPostExecute(o: Any?) {
-            super.onPostExecute(o)
-            searchTimeInterface.getTimeDetails(formattedTime)
-        }
-    }
-
-    fun getCurrentTimeOfLocation(search: String) {
-        val service: ExecutorService = Executors.newSingleThreadExecutor()
-        service.execute {
-            var selectedDiv = Elements()
-            val document = Jsoup.connect(CurrentTime + search).get()
-            selectedDiv = document.select("time[id=clock]")
-            val string1 = selectedDiv.select("span[id=bcdigit1]").text()
-            val string2 = selectedDiv.select("span[id=bcdigit2]").text()
-            val string3 = selectedDiv.select("span[class=sep]").text()
-            val string4 = selectedDiv.select("span[id=bcdigit3]").text()
-            val string5 = selectedDiv.select("span[id=bcdigit4]").text()
-            var formattedTime = "$string1$string2$string3$string4$string5"
-        }
-    }
+    const val CurrentTime = "https://time.is/?q="
 
     class SearchWeather(
         var activity: Activity,
@@ -174,7 +96,6 @@ object AppAsyncTask {
     }
 
     class HourSearchWeather(
-        var activity: Activity,
         searchWeatherInterface: AppInterfaces.SearchWeatherInterface,
         search: String
     ) :
@@ -192,8 +113,7 @@ object AppAsyncTask {
             try {
                 val document = Jsoup.connect(HourlyWeather + search).get()
                 selectedDiv =
-                    document.getElementsByClass("DetailsSummary--DetailsSummary--1DqhO DetailsSummary--hourlyDetailsSummary--2xM-L")
-                //                System.out.println("hourmainContent>>>>>>>>> " + selectedDiv);
+                    document.getElementsByClass("DaypartDetails--DetailSummaryContent--1-r0i Disclosure--SummaryDefault--2XBO9")
             } catch (e: IOException) {
                 println("scrapping crashed" + e.message)
             }
@@ -211,7 +131,6 @@ object AppAsyncTask {
     }
 
     class TenDaySearchWeather(
-        var activity: Activity,
         searchWeatherInterface: AppInterfaces.SearchWeatherInterface,
         search: String
     ) :

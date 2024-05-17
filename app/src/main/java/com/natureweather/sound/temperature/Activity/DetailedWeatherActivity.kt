@@ -40,10 +40,13 @@ import com.natureweather.sound.temperature.databinding.ActivityDetailedWeatherBi
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 import java.io.IOException
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
 
 class DetailedWeatherActivity : AppCompatActivity() {
@@ -199,28 +202,23 @@ class DetailedWeatherActivity : AppCompatActivity() {
             }
         }
 
-    fun getCurrentTimeOfLocation(search: String) {
+    fun setSunPosition(address: String) {
         val service: ExecutorService = Executors.newSingleThreadExecutor()
         service.execute {
-            var selectedDiv = Elements()
+            var selectedDiv: Elements
+            var search = removeDirectionsAndGetLocality(address).replace(" ", "_")
             val document = Jsoup.connect(AppAsyncTask.CurrentTime + search).get()
             selectedDiv = document.select("time[id=clock]")
-            val string1 = selectedDiv.select("span[id=bcdigit1]").text()
-            val string2 = selectedDiv.select("span[id=bcdigit2]").text()
-//            val string3 = selectedDiv.select("span[class=sep]").text()
-            val string4 = selectedDiv.select("span[id=bcdigit3]").text()
-            val string5 = selectedDiv.select("span[id=bcdigit4]").text()
-            var formattedTime = "$string1$string2$string4$string5"
-            try {
-                val startTime = sunrise.replace(":", "").replace("Sun Rise ", "")
-                    .toLong() // Start time in milliseconds
+            var formattedTime = selectedDiv.text().replace(":", "").substring(0, 4)
 
-                val endTime = sunset.replace(":", "").replace("Sunset ", "")
-                    .toLong() // End time in milliseconds
+            try {
+                val startTime = sunrise.replace(":", "").replace("Sun Rise ", "").toInt() // Start time in milliseconds
+
+                val endTime = sunset.replace(":", "").replace("Sunset ", "").toInt() // End time in milliseconds
 
 
                 val currentTime =
-                    formattedTime.replace(":", "").toLong() // Current time in milliseconds
+                    formattedTime.toInt()// Current time in milliseconds
 
                 println("Current Time>> $currentTime")
                 println("Current Time>>s $startTime")
@@ -228,68 +226,65 @@ class DetailedWeatherActivity : AppCompatActivity() {
                 val timeRange = endTime - startTime
                 val maxProgress = 100 // Adjust the maximum progress value as needed
 
-
-                val progresss =
-                    ((currentTime - startTime) * maxProgress / timeRange).toInt()
-                runOnUiThread({
-                    binding.seekArc.progress = progresss
+                val progress = when {
+                    currentTime < startTime -> 0
+                    currentTime > endTime -> maxProgress
+                    else -> ((currentTime - startTime) * maxProgress / (endTime - startTime)).coerceIn(0, 100)
+                }
+                println("Current Progress $progress")
+                println("Current Progress ${abs(progress.toInt())}")
+                runOnUiThread{
+                    binding.seekArc.progress = abs(progress.toInt())
                     binding.specificLl.setVisibility(View.VISIBLE)
-                })
+                }
+                /*val startTime = convertToMinutes(sunrise.replace(":", "").replace("Sun Rise ", "")) // Start time in milliseconds
+                val endTime = convertToMinutes(sunset.replace(":", "").replace("Sunset ", "")) // End time in milliseconds
+                val currentTime = convertToMinutes(formattedTime) // Current time in uniform format
+
+                println("Current Time>> $currentTime")
+                println("Start Time>> $startTime")
+                println("End Time>> $endTime")
+
+                val timeRange = endTime - startTime
+                val maxProgress = 100 // Adjust the maximum progress value as needed
+
+                val progress = ((currentTime - startTime) * maxProgress / timeRange).coerceIn(0, maxProgress)
+
+
+                // Update the UI on the main thread (assuming you are in an Android context)
+                runOnUiThread {
+                    binding.seekArc.progress = progress
+                    binding.specificLl.visibility = View.VISIBLE
+                }*/
 
             } catch (e: NumberFormatException) {
-//            throw new RuntimeException(e);
                 Log.e(TAG, "setSunPosition: ", e)
             }
         }
     }
 
-    private fun setSunPosition() {
-        try {
-            val searchWeather =
-                AppAsyncTask.SearchCurrentTime(object : AppInterfaces.SearchTimeInterface {
-                    override fun getTimeDetails(time: String) {
-                        val timeStamp = time
-                        println("<><><>$timeStamp")
-                        try {
-                            val startTime = sunrise.replace(":", "").replace("Sun Rise ", "")
-                                .toLong() // Start time in milliseconds
+    fun removeDirectionsAndGetLocality(locality: String): String {
+        // Regular expression to match common directions
+        val directionsPattern = Regex("\\b(north|south|east|west|northeast|northwest|southeast|southwest)\\b", RegexOption.IGNORE_CASE)
 
-                            val endTime = sunset.replace(":", "").replace("Sunset ", "")
-                                .toLong() // End time in milliseconds
+        // Remove directions from the locality string
+        val localityWithoutDirections = directionsPattern.replace(locality, "")
 
-
-                            val currentTime =
-                                timeStamp.replace(":", "").toLong() // Current time in milliseconds
-
-                            println("Current Time>> $currentTime")
-                            println("Current Time>>s $startTime")
-                            println("Current Time>>e $endTime")
-                            val timeRange = endTime - startTime
-                            val maxProgress = 100 // Adjust the maximum progress value as needed
-
-
-                            val progresss =
-                                ((currentTime - startTime) * maxProgress / timeRange).toInt()
-                            binding.seekArc.progress = progresss
-                            binding.specificLl.setVisibility(View.VISIBLE)
-                        } catch (e: NumberFormatException) {
-//            throw new RuntimeException(e);
-                            Log.e(TAG, "setSunPosition: ", e)
-                        }
-                    }
-                },address)
-            searchWeather.execute()
-        } catch (e: Exception) {
-//            throw new RuntimeException(e);
-            println("exception>>>>" + e.message)
+        // Get locality after removing text before comma
+        val localityParts = localityWithoutDirections.split(',')
+        val localityCleaned = if (localityParts.size > 1) {
+            localityParts[1].trim()
+        } else {
+            localityWithoutDirections.trim()
         }
 
+        return localityCleaned
     }
 
     private fun getTenDaysDetails(latlongs: String?) {
         try {
             val searchWeather =
-                AppAsyncTask.TenDaySearchWeather(this, object : AppInterfaces.SearchWeatherInterface {
+                AppAsyncTask.TenDaySearchWeather(object : AppInterfaces.SearchWeatherInterface {
                     override fun getWeatherDetails(scrapedElementsList: Elements?) {
                         binding.nextForecastRv.setLayoutManager(
                             LinearLayoutManager(
@@ -389,7 +384,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
     private fun getHourlyDetails(latlongs: String?) {
         try {
             val searchWeather =
-                AppAsyncTask.SearchWeatherPercipitation(this, object : AppInterfaces.SearchWeatherInterface {
+                AppAsyncTask.HourSearchWeather(object : AppInterfaces.SearchWeatherInterface {
                     override fun getWeatherDetails(scrapedElementsList: Elements?) {
                         binding.weatherDetailsRv.setLayoutManager(
                             LinearLayoutManager(
@@ -414,7 +409,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
         val hourlyDataArrayList = ArrayList<HourlyData>()
         for (i in scrapedElementsList.indices) {
             hourlyData = HourlyData()
-            hourlyData.time = scrapedElementsList[i].select("h3[data-testid=daypartName]").text()
+            hourlyData.time = scrapedElementsList[i].select("h2[class=DetailsSummary--daypartName--kbngc]").text()
             val temp = scrapedElementsList[i].select("span[data-testid=TemperatureValue]").text()
             hourlyData.temperature = temp.replace("°".toRegex(), "°C")
             val status =
@@ -427,12 +422,13 @@ class DetailedWeatherActivity : AppCompatActivity() {
             } else {
                 hourlyData.statusImage = R.drawable.sunny_img
             }
-            hourlyDataArrayList!!.add(hourlyData)
+            hourlyDataArrayList.add(hourlyData)
         }
-        for (i in hourlyDataArrayList!!.indices) {
-            if (!hourlyDataArrayList!![i].time!!
-                    .isEmpty() /*&& !filteredSongs.contains(songs.get(i))*/) {
-                if (hourlyDataArrayList!![i].time!!.contains("00:30")) {
+        println("hourlyDataArrayList >> $hourlyDataArrayList")
+        for (i in hourlyDataArrayList.indices) {
+            if (!hourlyDataArrayList[i].time!!
+                    .isEmpty()) {
+                if (hourlyDataArrayList[i].time!!.contains("00:30")) {
                     size = i
                     break
                 }
@@ -520,7 +516,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
                             }
                             println("Air Pressure>>$windSpeed")
                             setContent()
-                            getCurrentTimeOfLocation(address)
+                            setSunPosition(address)
                         }
                     }
                 }, latlongs!!)
