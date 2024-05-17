@@ -20,6 +20,7 @@ import android.widget.PopupMenu.OnMenuItemClickListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.condition
@@ -27,9 +28,8 @@ import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.max
 import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.temperature
 import com.natureweather.sound.temperature.Adapter.HourlyDataAdapter
 import com.natureweather.sound.temperature.Adapter.TenDaysDataAdapter
-import com.natureweather.sound.temperature.Extras.AppAsyncTask
-import com.natureweather.sound.temperature.Extras.AppInterfaces
 import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
+import com.natureweather.sound.temperature.Extras.DataFetcher
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Extras.Utils.convertAddress
@@ -37,15 +37,13 @@ import com.natureweather.sound.temperature.Extras.Utils.requestLocationPermissio
 import com.natureweather.sound.temperature.Model.HourlyData
 import com.natureweather.sound.temperature.R
 import com.natureweather.sound.temperature.databinding.ActivityDetailedWeatherBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.jsoup.Jsoup
 import org.jsoup.select.Elements
 import java.io.IOException
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import kotlin.math.abs
 
 
@@ -99,11 +97,6 @@ class DetailedWeatherActivity : AppCompatActivity() {
                 )
             )
         })
-//        getWeatherDetails(latlong)
-//        getHourlyDetails(latlong)
-//        getTenDaysDetails(latlong)
-//        setContent()
-        //        getPercipitation();
         binding.seekArc.setOnTouchListener(OnTouchListener { v, event ->
             true // Consume the touch event, preventing any action
         })
@@ -121,12 +114,16 @@ class DetailedWeatherActivity : AppCompatActivity() {
         if (!address!!.isEmpty()) {
             latlong = convertAddress(this, address)
             binding.selectedLocation.setText(address)
-            getWeatherDetails(latlong)
-            getHourlyDetails(latlong)
-            getTenDaysDetails(latlong)
-            setContent()
+            lifecycleScope.launch(Dispatchers.IO) {
+                getWeatherDetails(latlong)
+                getHourlyDetails(latlong)
+                getTenDaysDetails(latlong)
+                percipitation
+            }
         } else {
-            lastLocation
+            lifecycleScope.launch(Dispatchers.IO) {
+                lastLocation
+            }
         }
         binding.menu.setOnClickListener { view ->
             val popupMenu = PopupMenu(this, view)
@@ -183,89 +180,76 @@ class DetailedWeatherActivity : AppCompatActivity() {
 
     private val percipitation: Unit
         private get() {
-            try {
-                val searchWeather =
-                    AppAsyncTask.SearchWeatherPercipitation(this, object : AppInterfaces.SearchWeatherInterface {
-                        override fun getWeatherDetails(scrapedElementsList: Elements?) {
+            DataFetcher.searchPrecipitationWeather(latlong) { elements ->
+                // Handle the fetched weather data here
+                if (elements != null) {
+                    // Process the elements
+                    if (!elements.isEmpty()) {
+                        runOnUiThread {
                             binding.webView.loadData(
-                                scrapedElementsList.toString(),
+                                elements.toString(),
                                 "text/html",
                                 "utf-8"
                             )
                             binding.webView.visibility = View.VISIBLE
                         }
-                    }, latlong)
-                searchWeather.execute()
-            } catch (e: Exception) {
-//            throw new RuntimeException(e);
-                println("exception>>>>" + e.message)
+                    }
+                } else {
+                    // Handle error case
+                    println("Something went wrong!!")
+                }
             }
         }
 
     fun setSunPosition(address: String) {
-        val service: ExecutorService = Executors.newSingleThreadExecutor()
-        service.execute {
-            var selectedDiv: Elements
-            var search = removeDirectionsAndGetLocality(address).replace(" ", "_")
-            val document = Jsoup.connect(AppAsyncTask.CurrentTime + search).get()
-            selectedDiv = document.select("time[id=clock]")
-            var formattedTime = selectedDiv.text().replace(":", "").substring(0, 4)
+        var selectedDiv: Elements
+        var search = removeDirectionsAndGetLocality(address).replace(" ", "_")
+        val document = Jsoup.connect(DataFetcher.CURRENT_TIME_URL + search).get()
+        selectedDiv = document.select("time[id=clock]")
+        var formattedTime = selectedDiv.text().replace(":", "").substring(0, 4)
 
-            try {
-                val startTime = sunrise.replace(":", "").replace("Sun Rise ", "").toInt() // Start time in milliseconds
+        try {
+            val startTime = sunrise.replace(":", "").replace("Sun Rise ", "")
+                .toInt() // Start time in milliseconds
 
-                val endTime = sunset.replace(":", "").replace("Sunset ", "").toInt() // End time in milliseconds
-
-
-                val currentTime =
-                    formattedTime.toInt()// Current time in milliseconds
-
-                println("Current Time>> $currentTime")
-                println("Current Time>>s $startTime")
-                println("Current Time>>e $endTime")
-                val timeRange = endTime - startTime
-                val maxProgress = 100 // Adjust the maximum progress value as needed
-
-                val progress = when {
-                    currentTime < startTime -> 0
-                    currentTime > endTime -> maxProgress
-                    else -> ((currentTime - startTime) * maxProgress / (endTime - startTime)).coerceIn(0, 100)
-                }
-                println("Current Progress $progress")
-                println("Current Progress ${abs(progress.toInt())}")
-                runOnUiThread{
-                    binding.seekArc.progress = abs(progress.toInt())
-                    binding.specificLl.setVisibility(View.VISIBLE)
-                }
-                /*val startTime = convertToMinutes(sunrise.replace(":", "").replace("Sun Rise ", "")) // Start time in milliseconds
-                val endTime = convertToMinutes(sunset.replace(":", "").replace("Sunset ", "")) // End time in milliseconds
-                val currentTime = convertToMinutes(formattedTime) // Current time in uniform format
-
-                println("Current Time>> $currentTime")
-                println("Start Time>> $startTime")
-                println("End Time>> $endTime")
-
-                val timeRange = endTime - startTime
-                val maxProgress = 100 // Adjust the maximum progress value as needed
-
-                val progress = ((currentTime - startTime) * maxProgress / timeRange).coerceIn(0, maxProgress)
+            val endTime =
+                sunset.replace(":", "").replace("Sunset ", "").toInt() // End time in milliseconds
 
 
-                // Update the UI on the main thread (assuming you are in an Android context)
-                runOnUiThread {
-                    binding.seekArc.progress = progress
-                    binding.specificLl.visibility = View.VISIBLE
-                }*/
+            val currentTime =
+                formattedTime.toInt()// Current time in milliseconds
 
-            } catch (e: NumberFormatException) {
-                Log.e(TAG, "setSunPosition: ", e)
+            println("Current Time>> $currentTime")
+            println("Current Time>>s $startTime")
+            println("Current Time>>e $endTime")
+            val timeRange = endTime - startTime
+            val maxProgress = 100 // Adjust the maximum progress value as needed
+
+            val progress = when {
+                currentTime < startTime -> 0
+                currentTime > endTime -> maxProgress
+                else -> ((currentTime - startTime) * maxProgress / (endTime - startTime)).coerceIn(
+                    0,
+                    100
+                )
             }
+            println("Current Progress $progress")
+            println("Current Progress ${abs(progress.toInt())}")
+            runOnUiThread {
+                binding.seekArc.progress = abs(progress.toInt())
+                binding.specificLl.setVisibility(View.VISIBLE)
+            }
+        } catch (e: NumberFormatException) {
+            Log.e(TAG, "setSunPosition: ", e)
         }
     }
 
     fun removeDirectionsAndGetLocality(locality: String): String {
         // Regular expression to match common directions
-        val directionsPattern = Regex("\\b(north|south|east|west|northeast|northwest|southeast|southwest)\\b", RegexOption.IGNORE_CASE)
+        val directionsPattern = Regex(
+            "\\b(north|south|east|west|northeast|northwest|southeast|southwest)\\b",
+            RegexOption.IGNORE_CASE
+        )
 
         // Remove directions from the locality string
         val localityWithoutDirections = directionsPattern.replace(locality, "")
@@ -282,24 +266,17 @@ class DetailedWeatherActivity : AppCompatActivity() {
     }
 
     private fun getTenDaysDetails(latlongs: String?) {
-        try {
-            val searchWeather =
-                AppAsyncTask.TenDaySearchWeather(object : AppInterfaces.SearchWeatherInterface {
-                    override fun getWeatherDetails(scrapedElementsList: Elements?) {
-                        binding.nextForecastRv.setLayoutManager(
-                            LinearLayoutManager(
-                                this@DetailedWeatherActivity,
-                                LinearLayoutManager.VERTICAL,
-                                false
-                            )
-                        )
-                        getTenDayData(scrapedElementsList!!)
-                    }
-                }, latlongs!!)
-            searchWeather.execute()
-        } catch (e: Exception) {
-//            throw new RuntimeException(e);
-            println("exception>>>>" + e.message)
+        DataFetcher.searchTenDayWeather(latlongs!!) { elements ->
+            // Handle the fetched weather data here
+            if (elements != null) {
+                // Process the elements
+                if (!elements.isEmpty()) {
+                    getTenDayData(elements)
+                }
+            } else {
+                // Handle error case
+                println("Something went wrong!!")
+            }
         }
     }
 
@@ -343,10 +320,13 @@ class DetailedWeatherActivity : AppCompatActivity() {
             }
             tenDaysDataArrayList.add(tenData)
         }
-        println("tendays>>>$tenDaysDataArrayList")
-        val tenadapter = TenDaysDataAdapter(this, tenDaysDataArrayList)
-        binding.nextForecastRv.setAdapter(tenadapter)
-        binding.nextForecastLl.setVisibility(View.VISIBLE)
+
+        runOnUiThread {
+            binding.nextForecastRv.setLayoutManager(LinearLayoutManager(this@DetailedWeatherActivity, LinearLayoutManager.VERTICAL, false))
+            val tenadapter = TenDaysDataAdapter(this, tenDaysDataArrayList)
+            binding.nextForecastRv.setAdapter(tenadapter)
+            binding.nextForecastLl.visibility = View.VISIBLE
+        }
     }
 
     private fun setContent() {
@@ -382,24 +362,17 @@ class DetailedWeatherActivity : AppCompatActivity() {
     }
 
     private fun getHourlyDetails(latlongs: String?) {
-        try {
-            val searchWeather =
-                AppAsyncTask.HourSearchWeather(object : AppInterfaces.SearchWeatherInterface {
-                    override fun getWeatherDetails(scrapedElementsList: Elements?) {
-                        binding.weatherDetailsRv.setLayoutManager(
-                            LinearLayoutManager(
-                                this@DetailedWeatherActivity,
-                                LinearLayoutManager.HORIZONTAL,
-                                false
-                            )
-                        )
-                        getHourlyData(scrapedElementsList!!)
-                    }
-                }, latlongs!!)
-            searchWeather.execute()
-        } catch (e: Exception) {
-//            throw new RuntimeException(e);
-            println("exception>>>>" + e.message)
+        DataFetcher.searchHourlyWeather(latlongs!!) { elements ->
+            // Handle the fetched weather data here
+            if (elements != null) {
+                // Process the elements
+                if (!elements.isEmpty()) {
+                    getHourlyData(elements)
+                }
+            } else {
+                // Handle error case
+                println("Something went wrong!!")
+            }
         }
     }
 
@@ -409,7 +382,8 @@ class DetailedWeatherActivity : AppCompatActivity() {
         val hourlyDataArrayList = ArrayList<HourlyData>()
         for (i in scrapedElementsList.indices) {
             hourlyData = HourlyData()
-            hourlyData.time = scrapedElementsList[i].select("h2[class=DetailsSummary--daypartName--kbngc]").text()
+            hourlyData.time =
+                scrapedElementsList[i].select("h2[class=DetailsSummary--daypartName--kbngc]").text()
             val temp = scrapedElementsList[i].select("span[data-testid=TemperatureValue]").text()
             hourlyData.temperature = temp.replace("°".toRegex(), "°C")
             val status =
@@ -424,106 +398,108 @@ class DetailedWeatherActivity : AppCompatActivity() {
             }
             hourlyDataArrayList.add(hourlyData)
         }
-        println("hourlyDataArrayList >> $hourlyDataArrayList")
         for (i in hourlyDataArrayList.indices) {
-            if (!hourlyDataArrayList[i].time!!
-                    .isEmpty()) {
-                if (hourlyDataArrayList[i].time!!.contains("00:30")) {
-                    size = i
-                    break
-                }
+            val time = hourlyDataArrayList[i].time
+            if (!time.isNullOrEmpty() && time.contains("23:00")) {
+                size = i + 1
+                break
             }
         }
-        val adapter = HourlyDataAdapter(this, hourlyDataArrayList, size)
-        binding.weatherDetailsRv.setAdapter(adapter)
-        binding.currentForecastLl.setVisibility(View.VISIBLE)
+
+        runOnUiThread {
+            binding.weatherDetailsRv.setLayoutManager(LinearLayoutManager(this@DetailedWeatherActivity, LinearLayoutManager.HORIZONTAL, false))
+            val adapter = HourlyDataAdapter(this, hourlyDataArrayList, size)
+            binding.weatherDetailsRv.setAdapter(adapter)
+            binding.currentForecastLl.setVisibility(View.VISIBLE)
+        }
     }
 
     private fun getWeatherDetails(latlongs: String?) {
-        try {
-            val searchWeather =
-                AppAsyncTask.SearchWeather(this, object : AppInterfaces.SearchWeatherInterface {
-                    override fun getWeatherDetails(scrapedElementsList: Elements?) {
-                        if (!scrapedElementsList!!.isEmpty()) {
-                            temperature =
-                                scrapedElementsList.select("span[class=CurrentConditions--tempValue--MHmYY]")
-                                    .text()
-                            condition =
-                                scrapedElementsList.select("div[class=CurrentConditions--phraseValue--mZC_p]")
-                                    .text()
-                            val maxmin =
-                                scrapedElementsList.select("div[class=CurrentConditions--tempHiLoValue--3T1DG]")
-                                    .text()
-                            max = "Max.: " + maxmin.substring(4, 7) + "  Min.: " + maxmin.substring(
-                                maxmin.length - 3, maxmin.length
+        DataFetcher.searchWeather(latlongs!!) { scrapedElementsList ->
+            // Handle the fetched weather data here
+            if (scrapedElementsList != null) {
+                // Process the elements
+                if (!scrapedElementsList.isEmpty()) {
+                    temperature =
+                        scrapedElementsList.select("span[class=CurrentConditions--tempValue--MHmYY]")
+                            .text()
+                    condition =
+                        scrapedElementsList.select("div[class=CurrentConditions--phraseValue--mZC_p]")
+                            .text()
+                    val maxmin =
+                        scrapedElementsList.select("div[class=CurrentConditions--tempHiLoValue--3T1DG]")
+                            .text()
+                    max = "Max.: " + maxmin.substring(4, 7) + "  Min.: " + maxmin.substring(
+                        maxmin.length - 3, maxmin.length
+                    )
+                    feelsLike =
+                        scrapedElementsList.select("span[class=TodayDetailsCard--feelsLikeTempValue--2icPt]")
+                            .text()
+                    uv = scrapedElementsList.select("span[data-testid=UVIndexValue]").text()
+                    windSpeed = scrapedElementsList.select("span[data-testid=Wind]").text()
+                    humidity =
+                        scrapedElementsList.select("span[data-testid=PercentageValue]")
+                            .text()
+                    visibility =
+                        scrapedElementsList.select("span[data-testid=VisibilityValue]")
+                            .text()
+                    airpressure =
+                        scrapedElementsList.select("span[data-testid=PressureValue]").text()
+                    sunrise =
+                        scrapedElementsList.select("div[data-testid=SunriseValue]").text()
+                    sunset =
+                        scrapedElementsList.select("div[data-testid=SunsetValue]").text()
+                    runOnUiThread {
+
+                        binding.currentTempOne.setText(temperature)
+                        binding.currentTempTwo.setText(temperature)
+                        binding.conditionTvOne.setText(condition)
+                        binding.conditionTvTwo.setText(condition)
+                        binding.maxMinOne.setText(max)
+                        binding.maxMinTwo.setText(max)
+                        binding.feelsLike.setText(feelsLike)
+                        binding.uv.setText(uv)
+                        binding.windSpeedTxt.setText(windSpeed.replace("Wind Direction", ""))
+                        binding.humidity.setText(humidity)
+                        binding.visibility.setText(visibility)
+                        binding.sunriseTv.setText(
+                            """
+                                    ${sunrise.replace("Sun Rise ", "")}
+                                    Sunrise
+                                    """.trimIndent()
+                        )
+                        binding.sunsetTv.setText(
+                            """
+                                    ${sunset.replace("Sunset", "")}
+                                    Sunset
+                                    """.trimIndent()
+                        )
+                        if (airpressure.contains("Arrow Down")) {
+                            binding.airPressure.setText(airpressure.replace("Arrow Down ", ""))
+                            binding.airPressure.setCompoundDrawablesWithIntrinsicBounds(
+                                R.drawable.arrow_down,
+                                0,
+                                0,
+                                0
                             )
-                            feelsLike =
-                                scrapedElementsList.select("span[class=TodayDetailsCard--feelsLikeTempValue--2icPt]")
-                                    .text()
-                            uv = scrapedElementsList.select("span[data-testid=UVIndexValue]").text()
-                            windSpeed = scrapedElementsList.select("span[data-testid=Wind]").text()
-                            humidity =
-                                scrapedElementsList.select("span[data-testid=PercentageValue]")
-                                    .text()
-                            visibility =
-                                scrapedElementsList.select("span[data-testid=VisibilityValue]")
-                                    .text()
-                            airpressure =
-                                scrapedElementsList.select("span[data-testid=PressureValue]").text()
-                            sunrise =
-                                scrapedElementsList.select("div[data-testid=SunriseValue]").text()
-                            sunset =
-                                scrapedElementsList.select("div[data-testid=SunsetValue]").text()
-                            binding.currentTempOne.setText(temperature)
-                            binding.currentTempTwo.setText(temperature)
-                            binding.conditionTvOne.setText(condition)
-                            binding.conditionTvTwo.setText(condition)
-                            binding.maxMinOne.setText(max)
-                            binding.maxMinTwo.setText(max)
-                            binding.feelsLike.setText(feelsLike)
-                            binding.uv.setText(uv)
-                            binding.windSpeedTxt.setText(windSpeed.replace("Wind Direction", ""))
-                            binding.humidity.setText(humidity)
-                            binding.visibility.setText(visibility)
-                            binding.sunriseTv.setText(
-                                """
-                                ${sunrise.replace("Sun Rise ", "")}
-                                Sunrise
-                                """.trimIndent()
+                        } else {
+                            binding.airPressure.setText(airpressure.replace("Arrow Up ", ""))
+                            binding.airPressure.setCompoundDrawablesWithIntrinsicBounds(
+                                R.drawable.arrow_up,
+                                0,
+                                0,
+                                0
                             )
-                            binding.sunsetTv.setText(
-                                """
-                                ${sunset.replace("Sunset", "")}
-                                Sunset
-                                """.trimIndent()
-                            )
-                            if (airpressure.contains("Arrow Down")) {
-                                binding.airPressure.setText(airpressure.replace("Arrow Down ", ""))
-                                binding.airPressure.setCompoundDrawablesWithIntrinsicBounds(
-                                    R.drawable.arrow_down,
-                                    0,
-                                    0,
-                                    0
-                                )
-                            } else {
-                                binding.airPressure.setText(airpressure.replace("Arrow Up ", ""))
-                                binding.airPressure.setCompoundDrawablesWithIntrinsicBounds(
-                                    R.drawable.arrow_up,
-                                    0,
-                                    0,
-                                    0
-                                )
-                            }
-                            println("Air Pressure>>$windSpeed")
-                            setContent()
-                            setSunPosition(address)
                         }
+                        println("Air Pressure>>$windSpeed")
+                        setContent()
                     }
-                }, latlongs!!)
-            searchWeather.execute()
-        } catch (e: Exception) {
-//            throw new RuntimeException(e);
-            println("exception>>>>" + e.message)
+                    setSunPosition(address)
+                }
+            } else {
+                // Handle error case
+                println("Something went wrong!!")
+            }
         }
     }
 
@@ -539,7 +515,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
                         val latitude = location.latitude
                         val longitude = location.longitude
                         println("location>>>$latitude,$longitude")
-                        latlong = "$latitude,$longitude".toString()
+                        latlong = "$latitude,$longitude"
                         val geocoder = Geocoder(this@DetailedWeatherActivity, Locale.getDefault())
                         try {
                             val addresses = geocoder.getFromLocation(latitude, longitude, 1)
@@ -555,7 +531,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
                         getWeatherDetails(latlong)
                         getHourlyDetails(latlong)
                         getTenDaysDetails(latlong)
-                        setContent()
+                        percipitation
                     }
 
                     if (ActivityCompat.checkSelfPermission(

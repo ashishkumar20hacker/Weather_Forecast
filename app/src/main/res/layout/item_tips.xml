@@ -2,12 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="5dp"
-    android:background="@drawable/tipbg"
+    android:layout_margin="8dp"
+    android:background="@drawable/tipbg2"
     android:gravity="center"
     android:orientation="vertical"
     android:id="@+id/card"
-    android:padding="8dp"
+    android:paddingVertical="15dp"
     android:paddingHorizontal="18dp">
 
     <TextView
@@ -15,21 +15,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:drawableStart="@drawable/infocircle"
-        android:drawablePadding="3dp"
-        android:fontFamily="@font/poppins"
-        android:text="Tip of the day"
+        android:drawablePadding="8dp"
+        android:fontFamily="@font/poppins_semibold"
         android:textColor="@color/white"
-        android:textSize="12sp" />
+        android:textSize="14sp" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="10dp"/>
 
     <TextView
         android:id="@+id/tip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/poppins"
-        android:paddingStart="22dp"
+        android:fontFamily="@font/poppins_medium"
+        android:paddingStart="25dp"
         android:paddingTop="3dp"
-        android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-        android:textColor="@color/white"
-        android:textSize="10sp" />
+        android:textColor="#CFFFFFFF"
+        android:textSize="12sp" />
 
 </LinearLayout>

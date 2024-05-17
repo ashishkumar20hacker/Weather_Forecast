@@ -5,8 +5,10 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.condition
 import com.natureweather.sound.temperature.Adapter.TipsAdapter
 import com.natureweather.sound.temperature.Extras.Utils
+import com.natureweather.sound.temperature.Extras.Utils.getTipsForCondition
 import com.natureweather.sound.temperature.Model.TipsModel
 import com.natureweather.sound.temperature.databinding.ActivityTipsBinding
 
@@ -27,61 +29,8 @@ class TipsActivity : AppCompatActivity() {
     }
 
     private fun fillList() {
-        val tipsModelArrayList: ArrayList<TipsModel>
-        tipsModelArrayList = ArrayList<TipsModel>()
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip ",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of ",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of the ",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "of the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        val tipsAdapter = TipsAdapter(this, tipsModelArrayList, "tips", object : TipsAdapter.OnTipClickListener{
-            override fun onTipclick() {
-            }
-
-        })
+        val tipsModelArrayList = getTipsForCondition(condition)
+        val tipsAdapter = TipsAdapter(this, tipsModelArrayList)
         binding.tipsRv.setAdapter(tipsAdapter)
     }
 }

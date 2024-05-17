@@ -14,19 +14,13 @@ import com.natureweather.sound.temperature.R
 
 class TipsAdapter(
     var activity: Activity,
-    tipsModelArrayList: ArrayList<TipsModel>,
-    activityName: String,
-    onTipClickListener: OnTipClickListener
+    tipsModelArrayList: List<TipsModel>,
 ) :
     RecyclerView.Adapter<TipsAdapter.ViewHolder>() {
-    var tipsModelArrayList: ArrayList<TipsModel>
-    var activityName: String
-    var onTipClickListener: OnTipClickListener
+    var tipsModelArrayList: MutableList<TipsModel>
 
     init {
-        this.tipsModelArrayList = tipsModelArrayList
-        this.activityName = activityName
-        this.onTipClickListener = onTipClickListener
+        this.tipsModelArrayList = tipsModelArrayList.toMutableList()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -37,14 +31,6 @@ class TipsAdapter(
 
     @SuppressLint("ResourceAsColor")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        if (activityName == "tips") {
-            holder.cardView.setBackgroundResource(R.drawable.tipbg2)
-        } else {
-            holder.itemView.setOnClickListener {
-                onTipClickListener.onTipclick()
-            }
-//            holder.cardView.setCardBackgroundColor(Color.parseColor("#80FFFFFF"));
-        }
         holder.title.setText(tipsModelArrayList[position].title)
         holder.tip.setText(tipsModelArrayList[position].tip)
     }
@@ -53,9 +39,6 @@ class TipsAdapter(
         return tipsModelArrayList.size
     }
 
-    interface OnTipClickListener {
-        fun onTipclick()
-    }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var title: TextView

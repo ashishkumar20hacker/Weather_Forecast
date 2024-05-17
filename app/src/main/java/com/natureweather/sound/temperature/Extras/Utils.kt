@@ -16,6 +16,7 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import com.natureweather.sound.temperature.BuildConfig
+import com.natureweather.sound.temperature.Model.TipsModel
 import com.natureweather.sound.temperature.R
 
 
@@ -170,6 +171,66 @@ object Utils {
             winParams.flags = winParams.flags and bits.inv()
         }
         win.setAttributes(winParams)
+    }
+
+    fun getTipsForCondition(condition: String): List<TipsModel> {
+        return when (condition) {
+            "Clear" -> listOf(
+                TipsModel("Sun Protection", "Wear sunglasses and use sunscreen."),
+                TipsModel("Stay Hydrated", "Drink plenty of water, especially if active."),
+                TipsModel("Plan Activities", "Ideal for outdoor activities; enjoy nature.")
+            )
+
+            "Cloudy" -> listOf(
+                TipsModel("Layer Up", "Clouds can make it feel cooler; dress in layers."),
+                TipsModel("Sun Protection", "UV rays still penetrate clouds; use sunscreen."),
+                TipsModel("Check Forecast", "Be prepared for possible rain.")
+            )
+
+            "Rainy" -> listOf(
+                TipsModel("Waterproof Gear", "Use a waterproof jacket, boots, and umbrella."),
+                TipsModel("Drive Safely", "Slow down, increase stopping distances."),
+                TipsModel("Avoid Flooding", "Do not walk or drive through flooded areas."),
+                TipsModel("Protect Electronics", "Use waterproof covers."),
+                TipsModel("Stay Warm", "Wet conditions can lead to hypothermia.")
+            )
+
+            "Snowy" -> listOf(
+                TipsModel("Drive Carefully", "Slow down and maintain a safe distance."),
+                TipsModel("Shovel Safely", "Take breaks, push snow instead of lifting."),
+                TipsModel("Use Salt/Sand", "Prevent slips on icy surfaces."),
+                TipsModel("Wear Proper Footwear", "Boots with good traction."),
+                TipsModel("Check Updates", "Stay informed about weather conditions.")
+            )
+
+            "Windy" -> listOf(
+                TipsModel("Secure Items", "Tie down or bring in loose objects."),
+                TipsModel("Avoid Trees/Power Lines", "Stay away from potential hazards."),
+                TipsModel("Drive Cautiously", "Maintain control of your vehicle."),
+                TipsModel("Close Windows/Doors", "Prevent wind damage."),
+                TipsModel("Stay Indoors", "Avoid flying debris.")
+            )
+
+            "Foggy" -> listOf(
+                TipsModel("Use Fog Lights", "If available, avoid high beams."),
+                TipsModel("Drive Slowly", "Maintain safe distances."),
+                TipsModel("Stay in Lane", "Use road markings."),
+                TipsModel("Listen for Traffic", "Open windows slightly."),
+                TipsModel("Clear Windshield", "Use wipers and defrosters.")
+            )
+
+            "Smoke" -> listOf(
+                TipsModel("Limit Outdoor Activity", "Stay indoors if air quality is poor."),
+                TipsModel("Use Masks", "Wear N95 masks to filter out smoke particles."),
+                TipsModel("Air Purifiers", "Use air purifiers indoors to maintain air quality."),
+                TipsModel("Keep Windows Closed", "Prevent smoke from entering."),
+                TipsModel("Monitor Air Quality", "Check local air quality updates.")
+            )
+
+            else -> listOf(
+                TipsModel("No Tips", "No tips available for this condition.")
+            )
+        }
     }
 
     fun nextActivity(activity: Activity, className: Class<*>?) {

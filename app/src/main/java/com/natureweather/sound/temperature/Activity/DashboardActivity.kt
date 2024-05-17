@@ -15,39 +15,34 @@ import android.view.View
 import android.view.Window
 import android.widget.ImageView
 import android.widget.PopupMenu
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.condition
 import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.max
 import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.temperature
-import com.natureweather.sound.temperature.Adapter.TipsAdapter
-import com.natureweather.sound.temperature.Adapter.TipsAdapter.OnTipClickListener
-import com.natureweather.sound.temperature.Extras.AppAsyncTask
-import com.natureweather.sound.temperature.Extras.AppInterfaces
 import com.natureweather.sound.temperature.Extras.ConnectionDetector
 import com.natureweather.sound.temperature.Extras.Constants
 import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
+import com.natureweather.sound.temperature.Extras.DataFetcher
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Extras.Utils.convertAddress
 import com.natureweather.sound.temperature.Extras.Utils.convertToFarenhiet
+import com.natureweather.sound.temperature.Extras.Utils.getTipsForCondition
 import com.natureweather.sound.temperature.Extras.Utils.isLocationPermissionGranted
 import com.natureweather.sound.temperature.Extras.Utils.nextActivity
 import com.natureweather.sound.temperature.Extras.Utils.rateApp
 import com.natureweather.sound.temperature.Extras.Utils.requestLocationPermission
 import com.natureweather.sound.temperature.Extras.Utils.shareApp
-import com.natureweather.sound.temperature.Model.TipsModel
 import com.natureweather.sound.temperature.R
 import com.natureweather.sound.temperature.databinding.ActivityDashboardBinding
-import com.natureweather.sound.temperature.stacklayoutmanager.DefaultAnimation
-import com.natureweather.sound.temperature.stacklayoutmanager.DefaultLayout
-import com.natureweather.sound.temperature.stacklayoutmanager.StackLayoutManager
-import org.jsoup.select.Elements
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.Locale
 
@@ -130,10 +125,14 @@ class DashboardActivity : AppCompatActivity() {
                 if (!address.isEmpty()) {
                     latlong = convertAddress(this, address)
                     binding.selectedLocation.text = address
-                    getWeatherDetails(latlong)
+
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        getWeatherDetails(latlong)
+                    }
+
                 } else {
                     getLastLocation()
-                    getWeatherDetails(latlong)
+                    // getWeatherDetails(latlong)
                 }
                 binding.weatherLl.setEnabled(true)
             } else {
@@ -193,127 +192,84 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun fillList() {
-        val manager = StackLayoutManager(
-            StackLayoutManager.ScrollOrientation.BOTTOM_TO_TOP, 2,
-            DefaultAnimation::class.java,
-            DefaultLayout::class.java
-        )
-        manager.setPagerMode(true) // Set to true if you want a ViewPager-like effect
-        manager.setPagerFlingVelocity(2000) // Set the minimum fling velocity to trigger page changes
-        manager.setItemOffset(150)
-        binding.dashTipsRv.setLayoutManager(manager)
-        val tipsModelArrayList = ArrayList<TipsModel>()
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip ",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of ",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of the ",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "of the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        tipsModelArrayList.add(
-            TipsModel(
-                "Tip of the day",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla."
-            )
-        )
-        val tipsAdapter =
-            TipsAdapter(this, tipsModelArrayList, "dashboard", object : OnTipClickListener {
-                override fun onTipclick() {
+        val tipsModelArrayList = getTipsForCondition("Smoke")
 
-                }
-            })
-        binding.dashTipsRv.setAdapter(tipsAdapter)
+        if (tipsModelArrayList.isNotEmpty()) {
+            binding.title.text = tipsModelArrayList[0].title
+            binding.title2.text = tipsModelArrayList[1].title
+            binding.tip.text = tipsModelArrayList[0].tip
+            binding.tip2.text = tipsModelArrayList[1].tip
+        }
+
+        binding.relative.setOnClickListener {
+            nextActivity(this@DashboardActivity, TipsActivity::class.java)
+        }
+
     }
 
     private fun getWeatherDetails(latlongs: String) {
-        binding.mainLayout.setVisibility(View.GONE)
-        binding.gifLoading.setVisibility(View.VISIBLE)
-        try {
-            val searchWeather =
-                AppAsyncTask.SearchWeather(this, object : AppInterfaces.SearchWeatherInterface {
-                    override fun getWeatherDetails(scrapedElementsList: Elements?) {
-                        if (!scrapedElementsList!!.isEmpty()) {
-                            temperature =
-                                scrapedElementsList.select("span[class=CurrentConditions--tempValue--MHmYY]")
-                                    .text()
-                            condition =
-                                scrapedElementsList.select("div[class=CurrentConditions--phraseValue--mZC_p]")
-                                    .text()
-                            val maxmin =
-                                scrapedElementsList.select("div[class=CurrentConditions--tempHiLoValue--3T1DG]")
-                                    .text()
-                            max = "Max.: " + maxmin.substring(
-                                4,
-                                7
-                            ) + "  Min.: " + maxmin.substring(maxmin.length - 3, maxmin.length)
-                            if (preferences.getBoolean(Constants.IS_CELCIUS, defValue = true)) {
-                                binding.temperatureTv.setText(temperature + "C")
-                            } else {
-                                val temp: String = temperature.substring(
-                                    1,
-                                    temperature.length - 1
-                                )
-                                binding.temperatureTv.setText(convertToFarenhiet(temp) + "ºF")
-                            }
-                            binding.conditionTv.setText(condition)
-                            binding.maxMin.setText(max)
-                            System.out.println("temperature>>>$temperature")
-                            System.out.println("condition>>>$condition")
-                            System.out.println("max>>>$max")
-                            setContent()
-                            fillList()
+        runOnUiThread {
+            binding.mainLayout.visibility = View.GONE
+            binding.gifLoading.visibility = View.VISIBLE
+        }
+        DataFetcher.searchWeather(latlongs) { elements ->
+            // Handle the fetched weather data here
+            if (elements != null) {
+                // Process the elements
+                if (!elements.isEmpty()) {
+                    temperature =
+                        elements.select("span[class=CurrentConditions--tempValue--MHmYY]")
+                            .text()
+                    condition =
+                        elements.select("div[class=CurrentConditions--phraseValue--mZC_p]")
+                            .text()
+                    val maxmin =
+                        elements.select("div[class=CurrentConditions--tempHiLoValue--3T1DG]")
+                            .text()
+                    max = "Max.: " + maxmin.substring(
+                        4,
+                        7
+                    ) + "  Min.: " + maxmin.substring(maxmin.length - 3, maxmin.length)
+
+                    runOnUiThread {
+                        if (preferences.getBoolean(Constants.IS_CELCIUS, defValue = true)) {
+                            binding.temperatureTv.setText(temperature + "C")
+                        } else {
+                            val temp: String = temperature.substring(
+                                1,
+                                temperature.length - 1
+                            )
+                            binding.temperatureTv.setText(convertToFarenhiet(temp) + "ºF")
                         }
+                        binding.conditionTv.setText(condition)
+                        binding.maxMin.setText(max)
+                        System.out.println("temperature>>>$temperature")
+                        System.out.println("condition>>>$condition")
+                        System.out.println("max>>>$max")
+                        setContent()
+                        fillList()
                     }
-                }, latlongs /*"19.15,72.94"*/)
-            searchWeather.execute()
-        } catch (e: Exception) {
-//            throw new RuntimeException(e);
-            println("exception>>>>" + e.message)
+                }
+            } else {
+                // Handle error case
+                println("Something went wrong!!")
+            }
         }
     }
 
     private fun setContent() {
-        if (condition.lowercase().contains("rain") || condition.lowercase().contains("shower") || condition.lowercase().contains("drizzle") || condition.lowercase().contains("cloudy")) {
+        if (condition.lowercase().contains("rain") || condition.lowercase()
+                .contains("shower") || condition.lowercase()
+                .contains("drizzle") || condition.lowercase().contains("cloudy")
+        ) {
             binding.conditionIv.setImageResource(R.drawable.light_rain)
             binding.mainLayout.setBackgroundResource(R.drawable.strom_bg)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-        } else if (condition.lowercase().contains("sunny") || condition.lowercase().contains("smoke") || condition.lowercase().contains("clear") || condition.lowercase().contains("haze")) {
+        } else if (condition.lowercase().contains("sunny") || condition.lowercase()
+                .contains("smoke") || condition.lowercase()
+                .contains("clear") || condition.lowercase().contains("haze")
+        ) {
             binding.conditionIv.setImageResource(R.drawable.sunny_img)
             binding.mainLayout.setBackgroundResource(R.drawable.sunny_bg)
             binding.conditionGif.setVisibility(View.VISIBLE)
@@ -357,7 +313,9 @@ class DashboardActivity : AppCompatActivity() {
                     }
                     println("location>>>$latitude,$longitude")
                     latlong = "$latitude,$longitude"
-                    getWeatherDetails(latlong)
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        getWeatherDetails(latlong)
+                    }
                     binding.weatherLl.setEnabled(true)
                 }
 
@@ -383,22 +341,8 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-//        menuInflater.inflate(R.menu.menu, menu)
-//        return super.onCreateOptionsMenu(menu)
-//    }
-//
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        when (item.itemId) {
-//            R.id.notification_nav -> Toast.makeText(this, "Notifications", Toast.LENGTH_SHORT)
-//                .show()
-//
-//            R.id.unit_nav -> Toast.makeText(this, "Units", Toast.LENGTH_SHORT).show()
-//            R.id.widgets_nav -> Toast.makeText(this, "Widgets", Toast.LENGTH_SHORT).show()
-//            R.id.rate_nav -> rateApp(this)
-//            R.id.share_nav -> shareApp(this)
-//        }
-//        return super.onOptionsItemSelected(item)
-//    }
-
+    override fun onDestroy() {
+        super.onDestroy()
+        DataFetcher.finalize()
+    }
 }

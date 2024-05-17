@@ -1,24 +1,27 @@
 package com.natureweather.sound.temperature.Activity
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.natureweather.sound.temperature.Adapter.LocationsAdapter
 import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
+import com.natureweather.sound.temperature.Extras.DataFetcher
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Extras.Utils.convertAddress
 import com.natureweather.sound.temperature.Extras.Utils.hideKeyboard
+import com.natureweather.sound.temperature.Model.LocationModel
 import com.natureweather.sound.temperature.databinding.ActivityLocationsBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class LocationsActivity : AppCompatActivity() {
     lateinit var binding: ActivityLocationsBinding
     lateinit var preferences: SharePreferences
-    lateinit var locationsList: MutableList<String>
+    var locationModels: MutableList<LocationModel> = mutableListOf()
     lateinit var adapter : LocationsAdapter
     var latlong: String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +50,9 @@ class LocationsActivity : AppCompatActivity() {
                                 latlong = convertAddress(this@LocationsActivity, enteredLocation)
                                 preferences.addStringItem(enteredLocation)
                                 preferences.putString(SELECTED_ADDRESS,enteredLocation)
-                                loadRecyclerView()
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    fetchDataAndLoadRecyclerView(enteredLocation, latlong!!)
+                                }
                             }
                             return true
                         }
@@ -62,11 +67,42 @@ class LocationsActivity : AppCompatActivity() {
         loadRecyclerView()
     }
 
+    private fun fetchDataAndLoadRecyclerView(location: String, latlong: String) {
+        DataFetcher.searchWeather(latlong) { elements ->
+            elements?.let {
+                // Process the fetched data and create LocationModel instance for each location
+                val temperature = it.select("span[class=CurrentConditions--tempValue--MHmYY]").text()
+                val condition = it.select("div[class=CurrentConditions--phraseValue--mZC_p]").text()
+                val maxmin = it.select("div[class=CurrentConditions--tempHiLoValue--3T1DG]").text()
+                val max = "Max.: ${maxmin.substring(4, 7)}"
+                val min = "  Min.: ${maxmin.substring(maxmin.length - 3, maxmin.length)}"
+
+                val model = LocationModel(location, temperature, condition, max, min)
+                locationModels.add(model)
+
+                // Update the RecyclerView with the new data
+                runOnUiThread {
+                    adapter.notifyDataSetChanged()
+                }
+            } ?: run {
+                // Handle error case
+                println("Something went wrong!!")
+            }
+        }
+    }
+
     private fun loadRecyclerView() {
-        locationsList = preferences.getStringList()
-        if (locationsList.size != 0) {
-            adapter = LocationsAdapter(this@LocationsActivity, locationsList)
-            binding.locationRv.setAdapter(adapter)
+        val locationsList = preferences.getStringList()
+        if (locationsList.isNotEmpty()) {
+            adapter = LocationsAdapter(this@LocationsActivity, locationModels)
+            binding.locationRv.adapter = adapter
+            // Fetch data for each location in the list
+            for (location in locationsList) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val latlong: String = convertAddress(this@LocationsActivity, location)
+                    fetchDataAndLoadRecyclerView(location, latlong)
+                }
+            }
         }
     }
 
