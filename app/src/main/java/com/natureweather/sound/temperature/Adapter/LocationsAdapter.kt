@@ -9,10 +9,7 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
-import com.natureweather.sound.temperature.Extras.Constants.SELECTED_POSITION
-import com.natureweather.sound.temperature.Extras.DataFetcher
 import com.natureweather.sound.temperature.Extras.SharePreferences
-import com.natureweather.sound.temperature.Extras.Utils.convertAddress
 import com.natureweather.sound.temperature.Model.LocationModel
 import com.natureweather.sound.temperature.R
 
@@ -20,7 +17,7 @@ import com.natureweather.sound.temperature.R
 class LocationsAdapter(var context: Activity, list: MutableList<LocationModel>) :
     RecyclerView.Adapter<LocationsAdapter.ViewHolder>() {
     var list: MutableList<LocationModel>
-    var mPos = 0
+    var mPos = -1
     var preferences: SharePreferences? = null
 
     init {
@@ -42,7 +39,9 @@ class LocationsAdapter(var context: Activity, list: MutableList<LocationModel>) 
         val min = list[position].minTemp
 
         holder.cityName.setText(locality)
-        mPos = preferences!!.getInt(SELECTED_POSITION, 0)
+        if (locality.equals(preferences!!.getString(SELECTED_ADDRESS, ""))) {
+            mPos = position
+        }
         holder.conditionTv.text = condition
         holder.max.text = max
         holder.min.text = min
@@ -52,7 +51,6 @@ class LocationsAdapter(var context: Activity, list: MutableList<LocationModel>) 
         holder.itemView.setOnClickListener {
             mPos = position
             preferences!!.putString(SELECTED_ADDRESS, locality)
-            preferences!!.putInt(SELECTED_POSITION, position)
             notifyDataSetChanged()
         }
 
@@ -88,16 +86,20 @@ class LocationsAdapter(var context: Activity, list: MutableList<LocationModel>) 
     }
 
     private fun setContent(binding: ViewHolder) {
+
         if (binding.conditionTv.text.toString().lowercase()
                 .contains("rain") || binding.conditionTv.text.toString().lowercase()
                 .contains("shower") || binding.conditionTv.text.toString().lowercase()
-                .contains("drizzle")
+                .contains("drizzle") || binding.conditionTv.text.toString().lowercase()
+                .contains("cloudy")
         ) {
             binding.conditionIv.setImageResource(R.drawable.light_rain)
         } else if (binding.conditionTv.text.toString().lowercase()
                 .contains("sunny") || binding.conditionTv.text.toString().lowercase()
                 .contains("smoke") || binding.conditionTv.text.toString().lowercase()
-                .contains("clear")
+                .contains("clear") || binding.conditionTv.text.toString().lowercase()
+                .contains("haze") || binding.conditionTv.text.toString().lowercase()
+                .contains("fair")
         ) {
             binding.conditionIv.setImageResource(R.drawable.sunny_img)
         } else if (binding.conditionTv.text.toString().lowercase().contains("night")) {
@@ -105,5 +107,6 @@ class LocationsAdapter(var context: Activity, list: MutableList<LocationModel>) 
         } else if (binding.conditionTv.text.toString().lowercase().contains("storm")) {
             binding.conditionIv.setImageResource(R.drawable.storme_img)
         }
+
     }
 }

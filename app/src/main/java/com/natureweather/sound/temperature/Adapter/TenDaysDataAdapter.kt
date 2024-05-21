@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.natureweather.sound.temperature.Extras.SharePreferences
+import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Model.HourlyData
 import com.natureweather.sound.temperature.R
 
@@ -14,6 +16,7 @@ import com.natureweather.sound.temperature.R
 class TenDaysDataAdapter(var context: Context, tenDaysData: ArrayList<HourlyData>) :
     RecyclerView.Adapter<TenDaysDataAdapter.ViewHolder>() {
     var tenDaysData: ArrayList<HourlyData>
+    lateinit var preferences: SharePreferences
 
     init {
         this.tenDaysData = tenDaysData
@@ -22,14 +25,25 @@ class TenDaysDataAdapter(var context: Context, tenDaysData: ArrayList<HourlyData
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view: View = LayoutInflater.from(parent.context)
             .inflate(R.layout.ten_days_report_item, parent, false)
+        preferences = SharePreferences(context)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         if (tenDaysData.size != 0) {
+            holder.temperature.setText(
+                "${
+                Utils.checkAndSetTemperature(
+                    preferences,
+                    tenDaysData[position].temperature!!.substring(0, 3)
+                )}/${
+                    Utils.checkAndSetTemperature(
+                        preferences,
+                        tenDaysData[position].temperature!!.substring(5, tenDaysData[position].temperature!!.length - 1)
+                    )}"
+            )
             holder.day.setText(tenDaysData[position].day)
             holder.date.setText(tenDaysData[position].date)
-            holder.temperature.setText(tenDaysData[position].temperature)
             holder.status.setImageResource(tenDaysData[position].statusImage)
         } else {
             println("No Data Found")

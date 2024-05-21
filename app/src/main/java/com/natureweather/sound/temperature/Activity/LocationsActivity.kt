@@ -74,14 +74,17 @@ class LocationsActivity : AppCompatActivity() {
                 val temperature = it.select("span[class=CurrentConditions--tempValue--MHmYY]").text()
                 val condition = it.select("div[class=CurrentConditions--phraseValue--mZC_p]").text()
                 val maxmin = it.select("div[class=CurrentConditions--tempHiLoValue--3T1DG]").text()
-                val max = "Max.: ${maxmin.substring(4, 7)}"
-                val min = "  Min.: ${maxmin.substring(maxmin.length - 3, maxmin.length)}"
+                val max = "Max.: ${Utils.checkAndSetTemperature(preferences, maxmin.substring(4, 7))}"
+                val min = "  Min.: ${Utils.checkAndSetTemperature(preferences, maxmin.substring(maxmin.length - 3, maxmin.length))}"
 
-                val model = LocationModel(location, temperature, condition, max, min)
+                val model = LocationModel(location, Utils.checkAndSetTemperature(preferences, temperature), condition, max, min)
                 locationModels.add(model)
 
                 // Update the RecyclerView with the new data
                 runOnUiThread {
+                    if (binding.gifLoading.visibility == View.VISIBLE){
+                        binding.gifLoading.visibility = View.GONE
+                    }
                     adapter.notifyDataSetChanged()
                 }
             } ?: run {

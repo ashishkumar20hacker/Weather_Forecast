@@ -4,10 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.natureweather.sound.temperature.Extras.Constants
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.databinding.ActivitySplashBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class SplashActivity : AppCompatActivity() {
 
@@ -15,10 +19,7 @@ class SplashActivity : AppCompatActivity() {
     lateinit var preferences: SharePreferences
 
     companion object {
-
-        var condition: String = ""
-        var temperature: String = ""
-        var max: String = ""
+        var currentCondition: String = ""
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +34,8 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun nextActivity() {
-        Handler().postDelayed({
+        lifecycleScope.launch(Dispatchers.Main){
+            delay(2000)
             if (preferences.getBoolean(Constants.isFirstRun, true)) {
                 val intent = Intent(
                     this@SplashActivity,
@@ -45,7 +47,7 @@ class SplashActivity : AppCompatActivity() {
                 startActivity(Intent(applicationContext, DashboardActivity::class.java))
                 finish()
             }
-        }, 2000)
+        }
     }
 
 }

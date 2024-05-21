@@ -5,7 +5,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.condition
+import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.currentCondition
 import com.natureweather.sound.temperature.Adapter.TipsAdapter
 import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Extras.Utils.getTipsForCondition
@@ -29,7 +29,7 @@ class TipsActivity : AppCompatActivity() {
     }
 
     private fun fillList() {
-        val tipsModelArrayList = getTipsForCondition(condition)
+        val tipsModelArrayList = getTipsForCondition(currentCondition)
         val tipsAdapter = TipsAdapter(this, tipsModelArrayList)
         binding.tipsRv.setAdapter(tipsAdapter)
     }

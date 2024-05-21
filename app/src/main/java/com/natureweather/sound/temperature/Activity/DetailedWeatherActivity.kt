@@ -2,7 +2,6 @@ package com.natureweather.sound.temperature.Activity
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
@@ -10,7 +9,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
-import android.provider.Settings
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
@@ -23,15 +21,16 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.condition
-import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.max
-import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.temperature
+import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.currentCondition
 import com.natureweather.sound.temperature.Adapter.HourlyDataAdapter
 import com.natureweather.sound.temperature.Adapter.TenDaysDataAdapter
 import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
 import com.natureweather.sound.temperature.Extras.DataFetcher
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
+import com.natureweather.sound.temperature.Extras.Utils.checkAndSetPressure
+import com.natureweather.sound.temperature.Extras.Utils.checkAndSetTime
+import com.natureweather.sound.temperature.Extras.Utils.checkAndSetVisibility
 import com.natureweather.sound.temperature.Extras.Utils.convertAddress
 import com.natureweather.sound.temperature.Extras.Utils.requestLocationPermission
 import com.natureweather.sound.temperature.Model.HourlyData
@@ -59,6 +58,9 @@ class DetailedWeatherActivity : AppCompatActivity() {
     var sunset: String = ""
     var latlong: String = ""
     var address: String = ""
+    var condition: String = ""
+    var temperature: String = ""
+    var max: String = ""
     lateinit var preferences: SharePreferences
     private var locationManager: LocationManager? = null
     private var locationListener: LocationListener? = null
@@ -69,12 +71,6 @@ class DetailedWeatherActivity : AppCompatActivity() {
         val view: View = binding.getRoot()
         setContentView(view)
         preferences = SharePreferences(this)
-        binding.currentTempOne.setText(temperature)
-        binding.currentTempTwo.setText(temperature)
-        binding.conditionTvOne.setText(condition)
-        binding.conditionTvTwo.setText(condition)
-        binding.maxMinOne.setText(max)
-        binding.maxMinTwo.setText(max)
         val c = Calendar.getInstance()
         val monthName = arrayOf(
             "January", "February", "March", "April", "May", "June", "July",
@@ -142,12 +138,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
                         }
 
                         R.id.unit_nav -> {
-                            Toast.makeText(
-                                this@DetailedWeatherActivity,
-                                "Units",
-                                Toast.LENGTH_SHORT
-                            )
-                                .show()
+                            Utils.showUnitsDialog(this@DetailedWeatherActivity)
                             return true
                         }
 
@@ -218,11 +209,6 @@ class DetailedWeatherActivity : AppCompatActivity() {
 
             val currentTime =
                 formattedTime.toInt()// Current time in milliseconds
-
-            println("Current Time>> $currentTime")
-            println("Current Time>>s $startTime")
-            println("Current Time>>e $endTime")
-            val timeRange = endTime - startTime
             val maxProgress = 100 // Adjust the maximum progress value as needed
 
             val progress = when {
@@ -233,8 +219,6 @@ class DetailedWeatherActivity : AppCompatActivity() {
                     100
                 )
             }
-            println("Current Progress $progress")
-            println("Current Progress ${abs(progress.toInt())}")
             runOnUiThread {
                 binding.seekArc.progress = abs(progress.toInt())
                 binding.specificLl.setVisibility(View.VISIBLE)
@@ -330,34 +314,32 @@ class DetailedWeatherActivity : AppCompatActivity() {
     }
 
     private fun setContent() {
-        if (condition.toLowerCase().contains("rain") || condition.toLowerCase()
-                .contains("shower") || condition.toLowerCase().contains("drizzle")
+        if (condition.lowercase().contains("rain") || condition.lowercase()
+                .contains("shower") || condition.lowercase()
+                .contains("drizzle") || condition.lowercase().contains("cloudy")
         ) {
             binding.conditionIv.setImageResource(R.drawable.light_rain)
             binding.mainLayout.setBackgroundResource(R.drawable.strom_bg_img)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-            Glide.with(this).load(R.drawable.storm_gif).into(binding.gifCondition)
-        } else if (condition.toLowerCase().contains("sunny") || condition.toLowerCase()
-                .contains("smoke")
+        } else if (condition.lowercase().contains("sunny") || condition.lowercase()
+                .contains("smoke") || condition.lowercase()
+                .contains("clear") || condition.lowercase().contains("haze")
         ) {
             binding.conditionIv.setImageResource(R.drawable.sunny_img)
             binding.mainLayout.setBackgroundResource(R.drawable.sunny_bg_img)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.sunny_gif).into(binding.conditionGif)
-            Glide.with(this).load(R.drawable.sunny_gif).into(binding.gifCondition)
-        } else if (condition.toLowerCase().contains("night")) {
+        } else if (condition.lowercase().contains("night")) {
             binding.conditionIv.setImageResource(R.drawable.night_img)
             binding.mainLayout.setBackgroundResource(R.drawable.night_bg_img)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.cloudy_night_gif).into(binding.conditionGif)
-            Glide.with(this).load(R.drawable.cloudy_night_gif).into(binding.gifCondition)
-        } else if (condition.toLowerCase().contains("storm")) {
+        } else if (condition.lowercase().contains("storm")) {
             binding.conditionIv.setImageResource(R.drawable.storme_img)
             binding.mainLayout.setBackgroundResource(R.drawable.strom_bg_img)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-            Glide.with(this).load(R.drawable.storm_gif).into(binding.gifCondition)
         }
     }
 
@@ -400,7 +382,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
         }
         for (i in hourlyDataArrayList.indices) {
             val time = hourlyDataArrayList[i].time
-            if (!time.isNullOrEmpty() && time.contains("23:00")) {
+            if (!time.isNullOrEmpty() && (time.contains("23:00") || time.contains("23:30"))) {
                 size = i + 1
                 break
             }
@@ -450,32 +432,32 @@ class DetailedWeatherActivity : AppCompatActivity() {
                     sunset =
                         scrapedElementsList.select("div[data-testid=SunsetValue]").text()
                     runOnUiThread {
+                        currentCondition = condition
+                        binding.currentTempOne.text = Utils.checkAndSetTemperature(preferences, temperature)
+                        binding.conditionTvOne.text = condition
+                        binding.maxMinOne.text = "Max.: ${Utils.checkAndSetTemperature(preferences, maxmin.substring(4, 7))} Min.: ${Utils.checkAndSetTemperature(preferences, maxmin.substring(maxmin.length - 3, maxmin.length))}"
 
-                        binding.currentTempOne.setText(temperature)
-                        binding.currentTempTwo.setText(temperature)
-                        binding.conditionTvOne.setText(condition)
-                        binding.conditionTvTwo.setText(condition)
-                        binding.maxMinOne.setText(max)
-                        binding.maxMinTwo.setText(max)
-                        binding.feelsLike.setText(feelsLike)
+                        binding.weatherLl.visibility = View.VISIBLE
+
+                        binding.feelsLike.setText(Utils.checkAndSetTemperature(preferences, feelsLike))
                         binding.uv.setText(uv)
-                        binding.windSpeedTxt.setText(windSpeed.replace("Wind Direction", ""))
+                        binding.windSpeedTxt.setText(Utils.checkAndSetWindSpeed(this,preferences, windSpeed.replace("Wind Direction", "").replace("km/h", "").trim()))
                         binding.humidity.setText(humidity)
-                        binding.visibility.setText(visibility)
+                        binding.visibility.setText(checkAndSetVisibility(this, preferences, visibility.replace("km", "").trim()))
                         binding.sunriseTv.setText(
                             """
-                                    ${sunrise.replace("Sun Rise ", "")}
+                                    ${checkAndSetTime(this, preferences,sunrise.replace("Sun Rise ", ""))}
                                     Sunrise
                                     """.trimIndent()
                         )
                         binding.sunsetTv.setText(
                             """
-                                    ${sunset.replace("Sunset", "")}
+                                    ${checkAndSetTime(this, preferences,sunset.replace("Sunset", ""))}
                                     Sunset
                                     """.trimIndent()
                         )
                         if (airpressure.contains("Arrow Down")) {
-                            binding.airPressure.setText(airpressure.replace("Arrow Down ", ""))
+                            binding.airPressure.setText(checkAndSetPressure(this, preferences, airpressure.replace("Arrow Down ", "").replace("mb", "").trim()))
                             binding.airPressure.setCompoundDrawablesWithIntrinsicBounds(
                                 R.drawable.arrow_down,
                                 0,
@@ -483,7 +465,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
                                 0
                             )
                         } else {
-                            binding.airPressure.setText(airpressure.replace("Arrow Up ", ""))
+                            binding.airPressure.setText(checkAndSetPressure(this, preferences, airpressure.replace("Arrow Up ", "").replace("mb", "").trim()))
                             binding.airPressure.setCompoundDrawablesWithIntrinsicBounds(
                                 R.drawable.arrow_up,
                                 0,
@@ -491,7 +473,6 @@ class DetailedWeatherActivity : AppCompatActivity() {
                                 0
                             )
                         }
-                        println("Air Pressure>>$windSpeed")
                         setContent()
                     }
                     setSunPosition(address)
@@ -556,29 +537,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
             }
         }
 
-    private fun showLocationSettingsDialog() {
-        val builder = AlertDialog.Builder(this@DetailedWeatherActivity)
-        builder.setTitle("Need Permissions")
-        builder.setMessage("This app needs permission to use this feature. You can grant them in app settings.")
-        builder.setPositiveButton(
-            "GOTO SETTINGS"
-        ) { dialogInterface, i ->
-            dialogInterface.cancel()
-            val callGPSSettingIntent =
-                Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            startActivityForResult(
-                callGPSSettingIntent,
-                LOCATION_PERMISSIONS
-            )
-        }
-        builder.setNegativeButton(
-            "Cancel"
-        ) { dialogInterface, i -> dialogInterface.cancel() }
-        builder.show()
-    }
-
     companion object {
-        private const val LOCATION_PERMISSIONS = 123
         private const val TAG = "DetailedWeatherActivity"
     }
 }

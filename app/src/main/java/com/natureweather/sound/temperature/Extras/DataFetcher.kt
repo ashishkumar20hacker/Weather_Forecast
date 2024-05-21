@@ -11,7 +11,6 @@ object DataFetcher {
     private const val WEATHER_BASE_URL = "https://weather.com/en-IN/weather/"
     const val CURRENT_TIME_URL = "https://time.is/?q="
 
-    private val coroutineDispatcher = Executors.newCachedThreadPool().asCoroutineDispatcher()
 
     private enum class WeatherDataType {
         GENERAL,
@@ -70,10 +69,6 @@ object DataFetcher {
             search,
             callback
         )
-    }
-
-    fun finalize() {
-        coroutineDispatcher.close()
     }
 }
 

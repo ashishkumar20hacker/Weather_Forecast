@@ -31,5 +31,32 @@
     <string name="following_link">Following link :</string>
     <string name="terms_and_conditions"><u>Terms and conditions</u></string>
     <string name="pp_p"><u>Privacy policy</u></string>
+    <string name="units">Units</string>
+    <string name="temperature_unit">Temperature Unit</string>
+    <string name="wind_unit">Wind Unit</string>
+    <string name="rain_unit">Rain Unit</string>
+    <string name="pressure_unit">Pressure Unit</string>
+    <string name="visibility_unit">Visibility Unit</string>
+    <string name="time_format">Time Format</string>
+    <string name="date_format">Date Format</string>
+    <string name="km_h">km/h</string>
+    <string name="mph">mph</string>
+    <string name="m_s">m/s</string>
+    <string name="mm">mm</string>
+    <string name="inch">in</string>
+    <string name="mbar">mbar</string>
+    <string name="bar">bar</string>
+    <string name="psi">psi</string>
+    <string name="inhg">inHg</string>
+    <string name="mmhg">mmHg</string>
+    <string name="km">km</string>
+    <string name="mile">mile</string>
+    <string name="_24_hour_clock">24-hour clock</string>
+    <string name="_12_hour_clock">12-hour clock</string>
+    <string name="dd_mm_yyyy">dd/mm/yyyy</string>
+    <string name="mm_dd_yyyy">mm/dd/yyyy</string>
+    <string name="yyyy_mm_dd">yyyy/mm/dd</string>
+    <string name="fahrenheit">ºF</string>
+    <string name="celsius">ºC</string>
 
 </resources>

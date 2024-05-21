@@ -22,23 +22,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.condition
-import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.max
-import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.temperature
+import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.currentCondition
 import com.natureweather.sound.temperature.Extras.ConnectionDetector
 import com.natureweather.sound.temperature.Extras.Constants
 import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
 import com.natureweather.sound.temperature.Extras.DataFetcher
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
+import com.natureweather.sound.temperature.Extras.Utils.checkAndSetTemperature
 import com.natureweather.sound.temperature.Extras.Utils.convertAddress
-import com.natureweather.sound.temperature.Extras.Utils.convertToFarenhiet
 import com.natureweather.sound.temperature.Extras.Utils.getTipsForCondition
 import com.natureweather.sound.temperature.Extras.Utils.isLocationPermissionGranted
 import com.natureweather.sound.temperature.Extras.Utils.nextActivity
 import com.natureweather.sound.temperature.Extras.Utils.rateApp
 import com.natureweather.sound.temperature.Extras.Utils.requestLocationPermission
 import com.natureweather.sound.temperature.Extras.Utils.shareApp
+import com.natureweather.sound.temperature.Extras.Utils.showUnitsDialog
 import com.natureweather.sound.temperature.R
 import com.natureweather.sound.temperature.databinding.ActivityDashboardBinding
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +54,10 @@ class DashboardActivity : AppCompatActivity() {
     var connectionDetector: ConnectionDetector = ConnectionDetector(this)
     var latlong: String = ""
     var address: String = ""
+
+    var condition: String = ""
+    var temperature: String = ""
+    var max: String = ""
 
     private var locationManager: LocationManager? = null
     private var locationListener: LocationListener? = null
@@ -132,7 +135,6 @@ class DashboardActivity : AppCompatActivity() {
 
                 } else {
                     getLastLocation()
-                    // getWeatherDetails(latlong)
                 }
                 binding.weatherLl.setEnabled(true)
             } else {
@@ -158,8 +160,7 @@ class DashboardActivity : AppCompatActivity() {
                             }
 
                             R.id.unit_nav -> {
-                                Toast.makeText(this@DashboardActivity, "Units", Toast.LENGTH_SHORT)
-                                    .show()
+                                showUnitsDialog(this@DashboardActivity)
                                 return true
                             }
 
@@ -192,13 +193,22 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun fillList() {
-        val tipsModelArrayList = getTipsForCondition("Smoke")
+        val tipsModelArrayList = getTipsForCondition(condition)
 
-        if (tipsModelArrayList.isNotEmpty()) {
+        if (tipsModelArrayList.size > 1) {
             binding.title.text = tipsModelArrayList[0].title
-            binding.title2.text = tipsModelArrayList[1].title
             binding.tip.text = tipsModelArrayList[0].tip
+            binding.title2.text = tipsModelArrayList[1].title
             binding.tip2.text = tipsModelArrayList[1].tip
+            binding.card.visibility = View.VISIBLE
+            binding.card2.visibility = View.VISIBLE
+            binding.card3.visibility = View.GONE
+        } else {
+            binding.title3.text = tipsModelArrayList[0].title
+            binding.tip3.text = tipsModelArrayList[0].tip
+            binding.card.visibility = View.GONE
+            binding.card2.visibility = View.GONE
+            binding.card3.visibility = View.VISIBLE
         }
 
         binding.relative.setOnClickListener {
@@ -232,20 +242,22 @@ class DashboardActivity : AppCompatActivity() {
                     ) + "  Min.: " + maxmin.substring(maxmin.length - 3, maxmin.length)
 
                     runOnUiThread {
-                        if (preferences.getBoolean(Constants.IS_CELCIUS, defValue = true)) {
-                            binding.temperatureTv.setText(temperature + "C")
-                        } else {
-                            val temp: String = temperature.substring(
-                                1,
-                                temperature.length - 1
-                            )
-                            binding.temperatureTv.setText(convertToFarenhiet(temp) + "ºF")
-                        }
-                        binding.conditionTv.setText(condition)
-                        binding.maxMin.setText(max)
-                        System.out.println("temperature>>>$temperature")
-                        System.out.println("condition>>>$condition")
-                        System.out.println("max>>>$max")
+                        currentCondition = condition
+                        binding.temperatureTv.text =
+                            checkAndSetTemperature(preferences, temperature)
+                        binding.conditionTv.text = condition
+                        binding.maxMin.text =
+                            "Max.: ${
+                                checkAndSetTemperature(
+                                    preferences,
+                                    maxmin.substring(4, 7)
+                                )
+                            } Min.: ${
+                                checkAndSetTemperature(
+                                    preferences,
+                                    maxmin.substring(maxmin.length - 3, maxmin.length)
+                                )
+                            }"
                         setContent()
                         fillList()
                     }
@@ -281,7 +293,7 @@ class DashboardActivity : AppCompatActivity() {
             Glide.with(this).load(R.drawable.cloudy_night_gif).into(binding.conditionGif)
         } else if (condition.lowercase().contains("storm")) {
             binding.conditionIv.setImageResource(R.drawable.storme_img)
-            binding.mainLayout.setBackgroundResource(R.drawable.strom_bg_img)
+            binding.mainLayout.setBackgroundResource(R.drawable.strom_bg)
             binding.conditionGif.setVisibility(View.VISIBLE)
             Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
         }
@@ -339,10 +351,5 @@ class DashboardActivity : AppCompatActivity() {
         } else {
             requestLocationPermission(this)
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        DataFetcher.finalize()
     }
 }

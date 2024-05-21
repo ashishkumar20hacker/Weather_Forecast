@@ -70,4 +70,29 @@
         app:spanCount="2"
         tools:listitem="@layout/item_locations" />
 
+    <LinearLayout
+        android:id="@+id/gif_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical">
+
+        <pl.droidsonroids.gif.GifImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/sun_splash" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/poppins_semibold"
+            android:paddingStart="10dp"
+            android:text="Loading..."
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
 </RelativeLayout>
