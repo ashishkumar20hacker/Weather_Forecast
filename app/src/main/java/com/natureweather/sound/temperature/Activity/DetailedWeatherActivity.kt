@@ -21,6 +21,8 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.request.RequestOptions
 import com.natureweather.sound.temperature.Activity.SplashActivity.Companion.currentCondition
 import com.natureweather.sound.temperature.Adapter.HourlyDataAdapter
 import com.natureweather.sound.temperature.Adapter.TenDaysDataAdapter
@@ -97,9 +99,6 @@ class DetailedWeatherActivity : AppCompatActivity() {
             true // Consume the touch event, preventing any action
         })
 
-//        val url =
-//            "https://api.weather.com/v2/maps/dynamic?geocode=19.15,72.90&amp;h=320&amp;w=568&amp;lod=9&amp;product=twcRadarHcMosaic&amp;map=light&amp;format=jpg&amp;language=en-IN&amp;apiKey=21d8a80b3d6b444998a80b3d6b1449d3&amp;a=0&amp;region=in";
-//        Glide.with(this).load(url).into(binding.webView)
     }
 
     @SuppressLint("RestrictedApi")
@@ -177,12 +176,12 @@ class DetailedWeatherActivity : AppCompatActivity() {
                     // Process the elements
                     if (!elements.isEmpty()) {
                         runOnUiThread {
-                            binding.webView.loadData(
-                                elements.toString(),
-                                "text/html",
-                                "utf-8"
-                            )
-                            binding.webView.visibility = View.VISIBLE
+                            val url = elements.attr("style").replace("background-image:url(", "https:").replace(")","")
+                            Glide.with(this)
+                                .load(url)
+                                .apply(RequestOptions.bitmapTransform(RoundedCorners(70)))
+                                .into(binding.imageViewMap)
+                            binding.precipitationLl.visibility = View.VISIBLE
                         }
                     }
                 } else {

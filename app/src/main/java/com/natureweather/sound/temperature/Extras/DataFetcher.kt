@@ -32,7 +32,10 @@ object DataFetcher {
                 WeatherDataType.HOURLY -> document.getElementsByClass("DaypartDetails--DetailSummaryContent--1-r0i Disclosure--SummaryDefault--2XBO9")
                 WeatherDataType.TEN_DAY -> document.getElementsByClass("DetailsSummary--DetailsSummary--1DqhO DetailsSummary--fadeOnOpen--KnNyF")
                 WeatherDataType.PRECIPITATION -> document.getElementById("MainContent")!!.allElements.select(
-                    "div#WxuTodayMapCard-main-632099a6-18f7-4023-9f96-2c44f2246787"
+                    "div[class=\n" +
+                            "              Slideshow--slide--4GN6B\n" +
+                            "              Slideshow--showme--3qmfi\n" +
+                            "            ]"
                 )
             }
             callback.invoke(elements)
