@@ -8,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.natureweather.sound.temperature.Extras.Constants
 import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
+import com.natureweather.sound.temperature.Widgets.WidgetOneProvider
 import com.natureweather.sound.temperature.databinding.ActivitySplashBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

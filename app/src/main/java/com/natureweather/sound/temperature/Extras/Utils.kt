@@ -163,14 +163,15 @@ object Utils {
             context.getString(R.string.mile) -> {
                 val distanceInKm = value.toDouble()
                 val distanceInMiles = distanceInKm * 0.621371
-                "$distanceInMiles ${context.getString(R.string.mile)}"
+                String.format("%.2f %s", distanceInMiles, context.getString(R.string.mile))
             }
 
             else -> {
-                "$value ${context.getString(R.string.km)}"
+                String.format("%.2f %s", value.toDouble(), context.getString(R.string.km))
             }
         }
     }
+
 
     fun checkAndSetTime(
         context: Context,
@@ -202,6 +203,8 @@ object Utils {
         // Format the parsed date into the 12-hour format
         return outputFormat.format(date)
     }
+
+
 
     fun rateApp(context: Context) {
         try {

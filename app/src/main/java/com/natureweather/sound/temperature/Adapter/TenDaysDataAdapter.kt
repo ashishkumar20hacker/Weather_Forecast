@@ -31,17 +31,26 @@ class TenDaysDataAdapter(var context: Context, tenDaysData: ArrayList<HourlyData
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         if (tenDaysData.size != 0) {
-            holder.temperature.setText(
-                "${
-                Utils.checkAndSetTemperature(
-                    preferences,
-                    tenDaysData[position].temperature!!.substring(0, 3)
-                )}/${
-                    Utils.checkAndSetTemperature(
-                        preferences,
-                        tenDaysData[position].temperature!!.substring(5, tenDaysData[position].temperature!!.length - 1)
-                    )}"
-            )
+            if (tenDaysData[position].temperature!!.contains("--/--")) {
+                holder.temperature.setText("--/--")
+            } else {
+                holder.temperature.setText(
+                    "${
+                        Utils.checkAndSetTemperature(
+                            preferences,
+                            tenDaysData[position].temperature!!.substring(0, 3)
+                        )
+                    }${
+                        Utils.checkAndSetTemperature(
+                            preferences,
+                            tenDaysData[position].temperature!!.substring(
+                                4,
+                                tenDaysData[position].temperature!!.length - 1
+                            )
+                        )
+                    }"
+                )
+            }
             holder.day.setText(tenDaysData[position].day)
             holder.date.setText(tenDaysData[position].date)
             holder.status.setImageResource(tenDaysData[position].statusImage)

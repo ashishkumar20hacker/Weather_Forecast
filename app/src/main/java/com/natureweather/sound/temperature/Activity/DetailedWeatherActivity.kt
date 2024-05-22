@@ -95,7 +95,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
                 )
             )
         })
-        binding.seekArc.setOnTouchListener(OnTouchListener { v, event ->
+        binding.seekArc.setOnTouchListener({ v, event ->
             true // Consume the touch event, preventing any action
         })
 
@@ -110,10 +110,16 @@ class DetailedWeatherActivity : AppCompatActivity() {
             latlong = convertAddress(this, address)
             binding.selectedLocation.setText(address)
             lifecycleScope.launch(Dispatchers.IO) {
+                runOnUiThread {
+                    binding.gifLoading.visibility = View.VISIBLE
+                }
                 getWeatherDetails(latlong)
                 getHourlyDetails(latlong)
                 getTenDaysDetails(latlong)
                 percipitation
+                runOnUiThread {
+                    binding.gifLoading.visibility = View.GONE
+                }
             }
         } else {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -179,7 +185,7 @@ class DetailedWeatherActivity : AppCompatActivity() {
                             val url = elements.attr("style").replace("background-image:url(", "https:").replace(")","")
                             Glide.with(this)
                                 .load(url)
-                                .apply(RequestOptions.bitmapTransform(RoundedCorners(70)))
+                                .apply(RequestOptions.bitmapTransform(RoundedCorners(50)))
                                 .into(binding.imageViewMap)
                             binding.precipitationLl.visibility = View.VISIBLE
                         }

@@ -58,5 +58,7 @@
     <string name="yyyy_mm_dd">yyyy/mm/dd</string>
     <string name="fahrenheit">ºF</string>
     <string name="celsius">ºC</string>
+    <string name="skip"><u>Skip</u></string>
+    <string name="got_it"><u>Got it</u></string>
 
 </resources>

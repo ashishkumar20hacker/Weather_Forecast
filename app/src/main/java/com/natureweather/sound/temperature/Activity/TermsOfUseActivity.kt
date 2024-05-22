@@ -24,7 +24,7 @@ class TermsOfUseActivity : AppCompatActivity() {
         binding.agreebtn.setOnClickListener {
             nextActivity(
                 this@TermsOfUseActivity,
-                DashboardActivity::class.java
+                GuideActivity::class.java
             )
         }
 
