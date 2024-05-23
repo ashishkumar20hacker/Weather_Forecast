@@ -6,12 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.transition.Transition
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.JobIntentService
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.transition.Transition
 import com.natureweather.sound.temperature.Extras.Constants
 import com.natureweather.sound.temperature.Extras.DataFetcher
 import com.natureweather.sound.temperature.Extras.SharePreferences
@@ -68,7 +72,7 @@ class WidgetUpdateService : JobIntentService() {
 
         remoteViews.setTextViewText(R.id.cityName, location)
 
-        loadImageIntoWidget(context, remoteViews, appWidgetManager, appWidgetId, R.drawable.sun_splash)
+        loadGifIntoWidget(context, remoteViews, appWidgetManager, appWidgetId, R.drawable.sun_splash)
         CoroutineScope(Dispatchers.IO).launch {
             val elements = fetchWeatherData(latlong)
             elements?.let {
@@ -83,6 +87,12 @@ class WidgetUpdateService : JobIntentService() {
                     remoteViews.setTextViewText(R.id.condition_tv, condition)
                     remoteViews.setTextViewText(R.id.maxTemp, max)
                     remoteViews.setTextViewText(R.id.minTemp, min)
+
+                    Utils.getConditionImage(condition)?.let { it1 ->
+                        loadImageIntoWidget(context, remoteViews, appWidgetManager, appWidgetId,
+                            it1
+                        )
+                    }
 
                     remoteViews.setViewVisibility(R.id.gif_loading_ll, View.GONE)
                     remoteViews.setViewVisibility(R.id.main,View.VISIBLE)
@@ -105,7 +115,7 @@ class WidgetUpdateService : JobIntentService() {
         val location = preferences.getString(Constants.SELECTED_ADDRESS, "")
         val latlong: String = Utils.convertAddress(context, location)
 
-        loadImageIntoWidget(context, remoteViews, appWidgetManager, appWidgetId, R.drawable.sun_splash)
+        loadGifIntoWidget(context, remoteViews, appWidgetManager, appWidgetId, R.drawable.sun_splash)
         CoroutineScope(Dispatchers.IO).launch {
             val elements = fetchWeatherData(latlong)
             elements?.let {
@@ -123,6 +133,12 @@ class WidgetUpdateService : JobIntentService() {
                     val dateFormat = SimpleDateFormat("EEEE, MMMM, dd", Locale.ENGLISH)
                     val formattedDate = dateFormat.format(currentDate)
                     remoteViews.setTextViewText(R.id.date, formattedDate)
+
+                    Utils.getConditionImage(condition)?.let { it1 ->
+                        loadImageIntoWidget(context, remoteViews, appWidgetManager, appWidgetId,
+                            it1
+                        )
+                    }
 
                     remoteViews.setViewVisibility(R.id.gif_loading_ll, View.GONE)
                     remoteViews.setViewVisibility(R.id.main,View.VISIBLE)
@@ -151,6 +167,28 @@ class WidgetUpdateService : JobIntentService() {
     }
 
     private fun loadImageIntoWidget(
+        context: Context,
+        remoteViews: RemoteViews,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        iconUrl: Int
+    ) {
+        Glide.with(context)
+            .asBitmap()
+            .load(iconUrl)
+            .into(object : CustomTarget<Bitmap>() {
+                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                        remoteViews.setImageViewBitmap(R.id.condition_iv, resource)
+                        appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {
+                    // Handle placeholder if necessary
+                }
+            })
+    }
+
+    private fun loadGifIntoWidget(
         context: Context,
         remoteViews: RemoteViews,
         appWidgetManager: AppWidgetManager,

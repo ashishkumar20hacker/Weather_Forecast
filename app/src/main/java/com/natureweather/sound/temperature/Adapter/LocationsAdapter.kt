@@ -10,6 +10,7 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.natureweather.sound.temperature.Extras.Constants.SELECTED_ADDRESS
 import com.natureweather.sound.temperature.Extras.SharePreferences
+import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Model.LocationModel
 import com.natureweather.sound.temperature.R
 
@@ -46,7 +47,7 @@ class LocationsAdapter(var context: Activity, list: MutableList<LocationModel>) 
         holder.max.text = max
         holder.min.text = min
         holder.temperature.text = temperature
-        setContent(holder)
+        Utils.getConditionImage(holder.conditionTv.text.toString())?.let { holder.conditionIv.setImageResource(it) }
 
         holder.itemView.setOnClickListener {
             mPos = position
@@ -86,27 +87,6 @@ class LocationsAdapter(var context: Activity, list: MutableList<LocationModel>) 
     }
 
     private fun setContent(binding: ViewHolder) {
-
-        if (binding.conditionTv.text.toString().lowercase()
-                .contains("rain") || binding.conditionTv.text.toString().lowercase()
-                .contains("shower") || binding.conditionTv.text.toString().lowercase()
-                .contains("drizzle") || binding.conditionTv.text.toString().lowercase()
-                .contains("cloudy")
-        ) {
-            binding.conditionIv.setImageResource(R.drawable.light_rain)
-        } else if (binding.conditionTv.text.toString().lowercase()
-                .contains("sunny") || binding.conditionTv.text.toString().lowercase()
-                .contains("smoke") || binding.conditionTv.text.toString().lowercase()
-                .contains("clear") || binding.conditionTv.text.toString().lowercase()
-                .contains("haze") || binding.conditionTv.text.toString().lowercase()
-                .contains("fair")
-        ) {
-            binding.conditionIv.setImageResource(R.drawable.sunny_img)
-        } else if (binding.conditionTv.text.toString().lowercase().contains("night")) {
-            binding.conditionIv.setImageResource(R.drawable.night_img)
-        } else if (binding.conditionTv.text.toString().lowercase().contains("storm")) {
-            binding.conditionIv.setImageResource(R.drawable.storme_img)
-        }
-
-    }
+        Utils.getConditionImage(binding.conditionTv.text.toString())?.let { binding.conditionIv.setImageResource(it) }
+            }
 }

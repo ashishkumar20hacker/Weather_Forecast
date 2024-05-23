@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <item
+    <!--<item
         android:id="@+id/settings_nav"
         android:icon="@drawable/settings_nav"
         android:title="Settings"
@@ -29,7 +29,12 @@
 
         </menu>
 
-    </item>
+    </item>-->
+    <item
+        android:id="@+id/unit_nav"
+        android:icon="@drawable/unit"
+        android:title="Unit"
+        app:showAsAction="never|withText" />
     <item
         android:id="@+id/rate_nav"
         android:icon="@drawable/rate_nav"

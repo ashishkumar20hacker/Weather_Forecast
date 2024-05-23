@@ -40,13 +40,13 @@ class TenDaysDataAdapter(var context: Context, tenDaysData: ArrayList<HourlyData
                             preferences,
                             tenDaysData[position].temperature!!.substring(0, 3)
                         )
-                    }${
+                    }/${
                         Utils.checkAndSetTemperature(
                             preferences,
                             tenDaysData[position].temperature!!.substring(
                                 4,
-                                tenDaysData[position].temperature!!.length - 1
-                            )
+                                tenDaysData[position].temperature!!.length - 1 
+                            ).replace("/","")
                         )
                     }"
                 )

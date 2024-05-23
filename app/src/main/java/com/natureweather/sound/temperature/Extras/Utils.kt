@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.Window
@@ -21,10 +22,12 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
 import com.natureweather.sound.temperature.BuildConfig
 import com.natureweather.sound.temperature.Model.TipsModel
 import com.natureweather.sound.temperature.R
 import com.natureweather.sound.temperature.databinding.UnitsDialogBinding
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -56,7 +59,7 @@ object Utils {
         }
     }
 
-    fun convertAddress(context: Context?, address: String?): String {
+    /*fun convertAddress(context: Context?, address: String?): String {
         var latlong = ""
         val geoCoder = Geocoder(context!!)
         if (address != null && !address.isEmpty()) {
@@ -71,6 +74,31 @@ object Utils {
                 e.printStackTrace()
             } // end catch
         } // end if
+        return latlong
+    }*/
+
+    fun convertAddress(context: Context?, address: String?): String {
+        var latlong = ""
+        if (context == null || address.isNullOrEmpty()) {
+            return latlong
+        }
+
+        val geoCoder = Geocoder(context)
+        try {
+            val addressList = geoCoder.getFromLocationName(address, 1)
+            if (addressList != null && addressList.isNotEmpty()) {
+                val lat = addressList[0].latitude
+                val lng = addressList[0].longitude
+                latlong = "$lat,$lng"
+            }
+        } catch (e: IOException) {
+            // Handle specific IOException for network issues
+            Log.e("convertAddress", "Network error while converting address", e)
+        } catch (e: Exception) {
+            // Handle other exceptions
+            Log.e("convertAddress", "Error while converting address", e)
+        }
+
         return latlong
     }
 
@@ -861,5 +889,74 @@ object Utils {
         activity.overridePendingTransition(0, 0)
     }
 //    }
+
+    fun getConditionImage(condition: String): Int? {
+        var drawable: Int? = null
+        if (condition.lowercase().contains("rain") || condition.lowercase()
+                .contains("shower") || condition.lowercase()
+                .contains("drizzle") || condition.lowercase()
+                .contains("cloudy")
+        ) {
+            drawable = R.drawable.light_rain
+        } else if (condition.contains("sunny") || condition.lowercase()
+                .contains("smoke") || condition.lowercase()
+                .contains("clear") || condition.lowercase()
+                .contains("haze") || condition.lowercase()
+                .contains("fair")
+        ) {
+            drawable = R.drawable.sunny_img
+        } else if (condition.lowercase().contains("night")) {
+            drawable = R.drawable.night_img
+        } else if (condition.lowercase().contains("storm")) {
+            drawable = R.drawable.storme_img
+        }
+        return drawable
+    }
+
+    fun getConditionBgImage(condition: String, b: Boolean): Int? {
+        var drawable: Int? = null
+        if (condition.lowercase().contains("rain") || condition.lowercase()
+                .contains("shower") || condition.lowercase()
+                .contains("drizzle") || condition.lowercase().contains("cloudy")
+        ) {
+            drawable = if (b) R.drawable.strom_bg
+            else R.drawable.strom_bg_img
+        } else if (condition.lowercase().contains("sunny") || condition.lowercase()
+                .contains("smoke") || condition.lowercase()
+                .contains("clear") || condition.lowercase().contains("haze") || condition.lowercase()
+                .contains("fair")
+        ) {
+            drawable = if (b) R.drawable.sunny_bg
+            else R.drawable.sunny_bg_img
+        } else if (condition.lowercase().contains("night")) {
+            drawable = if (b) R.drawable.night_bg
+            else R.drawable.night_bg_img
+        } else if (condition.lowercase().contains("storm")) {
+            drawable = if (b) R.drawable.strom_bg
+            else R.drawable.strom_bg_img
+        }
+        return drawable
+    }
+
+    fun getConditionGif(condition: String): Int? {
+        var drawable: Int? = null
+        if (condition.lowercase().contains("rain") || condition.lowercase()
+                .contains("shower") || condition.lowercase()
+                .contains("drizzle") || condition.lowercase().contains("cloudy")
+        ) {
+            drawable = R.drawable.storm_gif
+        } else if (condition.lowercase().contains("sunny") || condition.lowercase()
+                .contains("smoke") || condition.lowercase()
+                .contains("clear") || condition.lowercase().contains("haze") || condition.lowercase()
+                .contains("fair")
+        ) {
+            drawable = R.drawable.sunny_gif
+        } else if (condition.lowercase().contains("night")) {
+            drawable = R.drawable.cloudy_night_gif
+        } else if (condition.lowercase().contains("storm")) {
+            drawable = R.drawable.storm_gif
+        }
+        return drawable
+    }
 }
 

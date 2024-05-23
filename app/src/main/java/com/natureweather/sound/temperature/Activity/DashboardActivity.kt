@@ -31,6 +31,9 @@ import com.natureweather.sound.temperature.Extras.SharePreferences
 import com.natureweather.sound.temperature.Extras.Utils
 import com.natureweather.sound.temperature.Extras.Utils.checkAndSetTemperature
 import com.natureweather.sound.temperature.Extras.Utils.convertAddress
+import com.natureweather.sound.temperature.Extras.Utils.getConditionBgImage
+import com.natureweather.sound.temperature.Extras.Utils.getConditionGif
+import com.natureweather.sound.temperature.Extras.Utils.getConditionImage
 import com.natureweather.sound.temperature.Extras.Utils.getTipsForCondition
 import com.natureweather.sound.temperature.Extras.Utils.isLocationPermissionGranted
 import com.natureweather.sound.temperature.Extras.Utils.nextActivity
@@ -270,33 +273,11 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun setContent() {
-        if (condition.lowercase().contains("rain") || condition.lowercase()
-                .contains("shower") || condition.lowercase()
-                .contains("drizzle") || condition.lowercase().contains("cloudy")
-        ) {
-            binding.conditionIv.setImageResource(R.drawable.light_rain)
-            binding.mainLayout.setBackgroundResource(R.drawable.strom_bg)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-        } else if (condition.lowercase().contains("sunny") || condition.lowercase()
-                .contains("smoke") || condition.lowercase()
-                .contains("clear") || condition.lowercase().contains("haze")
-        ) {
-            binding.conditionIv.setImageResource(R.drawable.sunny_img)
-            binding.mainLayout.setBackgroundResource(R.drawable.sunny_bg)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.sunny_gif).into(binding.conditionGif)
-        } else if (condition.lowercase().contains("night")) {
-            binding.conditionIv.setImageResource(R.drawable.night_img)
-            binding.mainLayout.setBackgroundResource(R.drawable.night_bg)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.cloudy_night_gif).into(binding.conditionGif)
-        } else if (condition.lowercase().contains("storm")) {
-            binding.conditionIv.setImageResource(R.drawable.storme_img)
-            binding.mainLayout.setBackgroundResource(R.drawable.strom_bg)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-        }
+        getConditionImage(condition)?.let { binding.conditionIv.setImageResource(it) }
+        getConditionBgImage(condition, true)?.let { binding.mainLayout.setBackgroundResource(it) }
+        Glide.with(this).load(getConditionGif(condition)).into(binding.conditionGif)
+        binding.conditionGif.setVisibility(View.VISIBLE)
+
         binding.gifLoading.setVisibility(View.GONE)
         binding.mainLayout.setVisibility(View.VISIBLE)
     }

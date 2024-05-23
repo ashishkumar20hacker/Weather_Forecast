@@ -4,6 +4,15 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release") {
+            storeFile =
+                file("C:\\Users\\Admin\\AndroidStudioProjects\\WeatherForecast\\weather_forecast.jks")
+            storePassword = "123456"
+            keyAlias = "key0"
+            keyPassword = "123456"
+        }
+    }
     namespace = "com.natureweather.sound.temperature"
     compileSdk = 34
 
@@ -15,6 +24,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig = signingConfigs.getByName("release")
     }
 
     buildTypes {
@@ -70,12 +80,10 @@ dependencies {
 
 
     implementation ("com.github.Triggertrap:SeekArc:v1.1")
-//    implementation 'com.github.marcinmoskala:ArcSeekBar:0.31'
 
     implementation ("androidx.room:room-runtime:2.6.1")
     annotationProcessor ("androidx.room:room-compiler:2.6.1")
 
-//    implementation 'com.littlemango:stacklayoutmanager:1.0.5'
     implementation (libs.androidx.annotation)
 
 }

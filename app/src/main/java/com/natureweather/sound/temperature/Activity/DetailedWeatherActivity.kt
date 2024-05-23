@@ -12,7 +12,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.view.View.OnTouchListener
 import android.widget.PopupMenu
 import android.widget.PopupMenu.OnMenuItemClickListener
 import android.widget.Toast
@@ -182,12 +181,16 @@ class DetailedWeatherActivity : AppCompatActivity() {
                     // Process the elements
                     if (!elements.isEmpty()) {
                         runOnUiThread {
-                            val url = elements.attr("style").replace("background-image:url(", "https:").replace(")","")
-                            Glide.with(this)
-                                .load(url)
-                                .apply(RequestOptions.bitmapTransform(RoundedCorners(50)))
-                                .into(binding.imageViewMap)
-                            binding.precipitationLl.visibility = View.VISIBLE
+                            try {
+                                val url = elements.attr("style").replace("background-image:url(", "https:").replace(")","")
+                                Glide.with(this)
+                                    .load(url)
+                                    .apply(RequestOptions.bitmapTransform(RoundedCorners(50)))
+                                    .into(binding.imageViewMap)
+                                binding.precipitationLl.visibility = View.VISIBLE
+                            } catch (e: Exception) {
+//                                Exception
+                            }
                         }
                     }
                 } else {
@@ -319,33 +322,13 @@ class DetailedWeatherActivity : AppCompatActivity() {
     }
 
     private fun setContent() {
-        if (condition.lowercase().contains("rain") || condition.lowercase()
-                .contains("shower") || condition.lowercase()
-                .contains("drizzle") || condition.lowercase().contains("cloudy")
-        ) {
-            binding.conditionIv.setImageResource(R.drawable.light_rain)
-            binding.mainLayout.setBackgroundResource(R.drawable.strom_bg_img)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-        } else if (condition.lowercase().contains("sunny") || condition.lowercase()
-                .contains("smoke") || condition.lowercase()
-                .contains("clear") || condition.lowercase().contains("haze")
-        ) {
-            binding.conditionIv.setImageResource(R.drawable.sunny_img)
-            binding.mainLayout.setBackgroundResource(R.drawable.sunny_bg_img)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.sunny_gif).into(binding.conditionGif)
-        } else if (condition.lowercase().contains("night")) {
-            binding.conditionIv.setImageResource(R.drawable.night_img)
-            binding.mainLayout.setBackgroundResource(R.drawable.night_bg_img)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.cloudy_night_gif).into(binding.conditionGif)
-        } else if (condition.lowercase().contains("storm")) {
-            binding.conditionIv.setImageResource(R.drawable.storme_img)
-            binding.mainLayout.setBackgroundResource(R.drawable.strom_bg_img)
-            binding.conditionGif.setVisibility(View.VISIBLE)
-            Glide.with(this).load(R.drawable.storm_gif).into(binding.conditionGif)
-        }
+        Utils.getConditionImage(condition)?.let { binding.conditionIv.setImageResource(it) }
+        Utils.getConditionBgImage(condition, false)?.let { binding.mainLayout.setBackgroundResource(it) }
+        Glide.with(this).load(Utils.getConditionGif(condition)).into(binding.conditionGif)
+        binding.conditionGif.setVisibility(View.VISIBLE)
+
+        binding.gifLoading.setVisibility(View.GONE)
+        binding.mainLayout.setVisibility(View.VISIBLE)
     }
 
     private fun getHourlyDetails(latlongs: String?) {
